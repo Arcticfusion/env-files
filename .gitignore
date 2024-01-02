@@ -1,0 +1,13 @@
+.CFUserTextEncoding
+.DS_Store
+.vscode/
+data
+src/config/iterm*
+src/config/op
+src/vscode-server
+**/.*history*
+**/.*hist*
+**/vim/.netrwhist
+**/test
+**/tmp
+**/temp
