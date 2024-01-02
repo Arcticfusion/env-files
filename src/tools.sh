@@ -1,14 +1,14 @@
 #!/bin/sh
 name_="tools.sh"
-if ! [ -n "$_TOOLS_INIT" ]; then
-  export _TOOLS_INIT="True"
+if ! [ -n "$_TOOLS_SH_INIT" ]; then
+  export _TOOLS_SH_INIT="True"
 else
   >&2 echo "Already Initialising $name_"
   return
 fi
 >&2 echo "Initialising $name_"
 unset name_
-# GEN TOOLS START
+# TOOLS SH START
 
 cleanPATH () {
   local _host_device="${HOST}${HOSTNAME}"
@@ -125,5 +125,5 @@ rstripf() {
   sed -Ei '' 's/ +$//' $( realpath "$@" | tr '\n' ' ' )
 }
 
-# GEN TOOLS END
-unset _TOOLS_INIT
+# TOOLS SH END
+unset _TOOLS_SH_INIT

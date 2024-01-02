@@ -211,7 +211,7 @@ quiet type realpath &&
 quiet which git && load_env_file "git.sh"
 
 # Other Tools
-load_env_file "gen.tools"
+load_env_file "tools.sh
 
 # Script Aliases
 load_env_file "scripts.sh"
