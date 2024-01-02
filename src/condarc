@@ -1,0 +1,16 @@
+channels:
+    - conda-forge-remote
+    - conda-thirdparty
+    - defaults
+show_channel_urls: true
+anaconda_upload: false
+auto_update_conda: false
+conda_activate_base: true
+report_errors: false
+
+pkgs_dirs:
+    - ${SAND}/tools/miniconda3/pkgs
+envs_dirs:
+    - ${SAND}/tools/miniconda3/envs
+
+env_prompt: ({name})

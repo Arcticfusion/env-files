@@ -1,0 +1,228 @@
+#!/bin/bash
+name_="aliases"
+if ! [ -n "$_ALIASES_INIT" ]; then
+  export _ALIASES_INIT="True"
+else
+  >&2 echo "Already Initialising $name_"
+  return
+fi
+>&2 echo "Initialising $name_"
+unset name_
+# ALIASES START
+
+# Make sure the PATH is complete before running this file.
+SAND="/sandbox/${USER}"
+test -d "$SAND" && export SAND || unset SAND
+
+if ! type realpath &>/dev/null; then
+  type readlink &>/dev/null && alias realpath="readlink -f"
+fi
+
+# Initialise Environment Tools
+test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
+test -z "$ENV_TOOLS" && source "$ENV_REPO/env.tools"
+
+load_env_file "env.repos" || continue
+load_env_file "colors.sh" || continue
+
+# cd
+alias cd='cd -L'
+alias cdr='cd /'
+alias cda='cd ~'
+alias sand="cd /sandbox/$USER/"
+cd_toggle () {
+  if test $# -ne 0; then
+    cwd_="$(realpath "$(pwd)")"
+    [[ "$cwd_" = "$(realpath "$1")" ]] &&
+    cd - ||
+    cd "$1"
+  else
+    cd -
+  fi
+}
+alias cdt='cd_toggle'
+alias erd='cd_toggle $ENV_REPO'
+
+quiet unalias sd
+sd () {
+  test -d "$SAND" &&
+  cd "$SAND/$1" && return
+  cd "$1"
+}
+_sd () { __tab_complete_from_path "$SAND" . ; }
+quiet complete -F _sd sd
+quiet unalias rd
+rd () {
+  test -d "$REPOS_PATH/$1" &&
+  cd "$REPOS_PATH/$1" && return
+  cd "$1"
+}
+_rd () { __tab_complete_from_path "$REPOS_PATH" . ; }
+quiet complete -F _rd rd
+
+test -d "$SAND" || {
+  export SAND="$HOME/sandbox"
+  mkdir -p "$SAND"
+  rd () {
+    test -d "$HOME/Documents/repos/$1" &&
+    cd "$HOME/Documents/repos/$1" && return
+    cd "$1"
+  }
+}
+
+quiet export -f sd
+quiet export -f rd
+
+# pwd
+alias pwda="echo -e \"$(pwd)\n$(pwd -P)\" | uniq"
+alias pwdr="pwd -P"
+
+# ls
+alias ls='ls -hGF --color=auto'
+alias la='ls -A'
+alias ll='ls -AlF'
+alias lld='ls -AlFt --time-style=+$DATE_FORMAT'
+alias l='ls -CF'
+
+# vim
+alias vir='vim -R'
+alias v='vim'
+
+# sqlite3
+alias sql='sqlite3'
+which sqlite3 &>/dev/null || unalias sql
+
+# switch to an interactive login shell
+alias lsh='exec $SHELL -li'
+# switch to a new shell
+alias rsh='exec $SHELL -$-'
+# directory contents size
+alias dirn='2>/dev/null du -shc'
+
+# STDIN piping aliases
+alias lower="tr '[:upper:]' '[:lower:]'"
+alias upper="tr '[:lower:]' '[:upper:]'"
+append () { sed -E "s/$/$*/"; }
+prepend() { sed -E "s/^/$*/"; }
+quiet export -f append
+quiet export -f prepend
+
+# grep and egrep
+alias grep='grep --directories=skip --color=auto'
+alias egrep='egrep --directories=skip --color=auto'
+alias ge='egrep'
+alias gi='egrep -i'
+
+# python
+alias py='python3'
+alias pyi='python3 -i'
+
+# VS Code
+alias vs='code'
+quiet which code || unalias vs
+
+# 1 Password
+alias opa='eval "$(op signin --account ${COMPANY_NAME})"'
+
+# shasum
+alias sha='shasum -a 256'
+
+# compressed archives
+alias untar='tar -xzvf'
+
+# Conda -> see .bashrc
+alias bb='conda activate bb'
+
+# Conan
+alias conen="conan editable"
+alias conel="conan editable list"
+alias coned="conan editable"
+
+# SSH
+alias rems='column -ts";" <<<$(cat $HOME/.ssh/config | egrep "Host(Name)? " |'"  tr '\\n' ' ' "'| sed -E '"'s/[ \\t]*HostName[ \\t]+/;/g'"' | sed -E '"'s/[ \\t]*Host[ \\t]+/\\n/g'"')'
+add-ssh ()
+{
+    echo "Host $1
+  HostName $2
+  IdentityFile ~/.ssh/id_rsa
+  AddKeysToAgent yes
+" >> "$HOME/.ssh/config"
+}
+
+# Docker
+alias dockar='docker login 0.0.0.0 -u $USER'
+alias dps='docker ps'
+alias dart='docker container start'
+alias dockers='docker ps --format "{{.Names}};{{.ID}};{{.Image}};{{.Status}};{{.Command}};{{.Ports}};"'
+quiet unalias docks
+docks () {
+  local pattern="$(join_by '|' "$@" )"
+   column -t -s';' <<< "$(cut -d';' -f1,2,4-6 <<< "Name;ID;Image;Status;Command;Ports
+$(dockers | egrep -i "$pattern")")"
+}
+quiet unalias dock
+dock () {
+  docker container exec -it "$@"
+}
+_dock () {
+  local cur prev words cword;
+  _get_comp_words_by_ref -n : cur prev words cword;
+  _docker_container_exec
+}
+quiet complete -F _dock dock
+quiet unalias dkall
+dkall () {
+  local pattern="$(join_by '|' "$@" )"
+  run docker kill "$(dockers | egrep -i "$pattern" | cut -f1 -d ";" | tr '\n' ' ' )"
+}
+
+# Echo Variables
+alias envi='env | egrep -i'
+evar () {
+    for v in "$@";
+    do
+        test -n "$(eval "echo -n \"\${$v}\"")" &&
+          eval "echo \"$v=\${$v}\"" ||
+          env | egrep -i --color=auto "$v\w*=";
+    done
+}
+fvar () {
+  local pattern="($(join_by '|' "$@" | sed 's/[^a-zA-Z0-9_|\-]//g' ))"
+  while read line; do
+    echo "$line" | egrep -i "$pattern" >/dev/null &&
+      echo -e "$(
+        sed -E "s/$pattern/\\${RED}\\1\\${YELLOW}/i" \
+          <<< $( eval "echo $( echo "\"${YELLOW}\$line${NO_COLOR}=\$$line\"")")
+      )"
+  done < <(compgen -v)
+}
+
+alias path='echo PATH=$PATH'
+alias xx='exit'
+
+# Find the absolute location of simlinked files
+quiet type readlink &&
+  alias realise='readlink -e' &&
+  alias rpe='readlink -e'
+quiet type realpath &&
+  alias rp='realpath'
+
+# Git Aliases and Commands
+quiet which git && load_env_file "git.sh"
+
+# Other Tools
+load_env_file "gen.tools"
+
+# Script Aliases
+load_env_file "scripts.sh"
+
+# Unsorted Aliases
+as () {
+  local alias_="alias $(echo "$*" | sed -E 's/[= ](.*)/='"'"'\1'"'"'/')"
+  #local alias_="alias \"$@\""
+  eval "$alias_" && echo "$alias_" >> "${ENV_REPO}/unsorted_aliases.sh"
+}
+quiet load_env_file "unsorted_aliases.sh"
+
+# ALIASES END
+unset _ALIASES_INIT

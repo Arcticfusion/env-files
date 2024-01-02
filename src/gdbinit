@@ -1,0 +1,15 @@
+add-auto-load-safe-path ~/.conan/data
+directory ~/Documents/repos
+alias spath=info dir
+alias here=where 1
+alias near=where 5
+alias type=what
+alias locs=info locals
+alias bs=info breakpoints
+alias vals=show values
+alias rval=print $eax
+alias -a nsym=add-symbol-file
+alias env=show env
+alias this=print *this
+show auto-load
+

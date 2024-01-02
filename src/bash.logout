@@ -1,0 +1,27 @@
+#!/bin/bash
+# ~/.bash_logout: executed by bash(1) when login shell exits.
+name_="bash.logout"
+if ! [ -n "${_BASH_LOGOUT_INIT}" ]; then
+export _BASH_LOGOUT_INIT="True"
+else
+  >&2 echo "Already Evaluating $name_"
+  return
+fi
+>&2 echo "Evaluating $name_"
+unset name_
+# BASH LOGOUT START
+
+# delete the temp directory made in bashrc
+if [ -d "${TMPDIR}" ]; then
+  rm -rf "${TMPDIR}"
+  unset TMPDIR
+fi
+
+quiet clean_tmp_files
+# when leaving the console clear the screen to increase privacy
+if [ "$SHLVL" = 1 ]; then
+    [ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
+fi
+
+# BASH LOGOUT END
+unset _BASH_LOGOUT_INIT

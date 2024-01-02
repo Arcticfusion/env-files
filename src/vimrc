@@ -1,0 +1,200 @@
+" .vimrc - Personalised Settings for Vim
+
+" Theme {{{
+if $SSH_CLIENT == "" 
+  colorscheme pire        " This these appears to break on the dev box
+else
+  colorscheme dark_matter
+endif
+"" Alternate Colour Schemes I like
+" default
+" lucid
+" spacecamp
+" spacecamp_lite (slightly lighter background of spacecamp)
+" PaperColor
+" torte
+"}}}
+
+" Package Management {{{
+set nocompatible
+" call plug#begin()
+" Plug 'sheerun/vim-polyglot'
+" call plug#end()
+" }}}
+
+" UI {{{
+
+set showcmd           " Show the last commmand in the Command Bar
+set wildmenu          " visual autocomplete for command menu
+set lazyredraw        " redraw only when we need to - ie not in macros
+let mapleader = ","   " remap mapleader to comma
+set cursorline       "  Highlight the Current Line
+if $LC_TERMINAL == 'iTerm2'
+  set cursorline!
+endif
+nnoremap <Leader>cl :set cursorline!<CR>
+
+" Graphical Tree of Undo - ie Super Undo
+nnoremap <leader>u :GundoToggle<CR>
+
+" Folding {{{
+set foldenable        " enable folding
+set foldlevelstart=10  " open top 6 levels of folds by default
+set foldnestmax=10    " 10 nested fold max
+set foldmethod=indent " fold based on indent level
+                      " can also use marker, manual, expr, syntax, diff
+                      " run :help foldmethod for more info
+" Opens/Closes Folds
+nnoremap <space> za
+"}}}
+
+" Mouse movements {{{
+set mouse=a
+"}}}
+
+"  Escape Sequences {{{
+inoremap qq <esc>
+
+vnoremap qq <esc>
+"}}}
+
+" Movement {{{
+" Remap movement, k is up, m is down, l is right, j is left
+" Visual lines are not skipped with g- modifier
+noremap k gk
+noremap m gj
+noremap j h
+noremap l l
+noremap - $
+noremap _ ^
+"}}}
+
+" Selection {{{
+vnoremap V <C-v>
+vnoremap C <C-v>
+"}}}
+
+" Commenting {{{
+augroup commenting_blocks_of_code
+  autocmd!
+  autocmd FileType c,cpp,java,scala let b:comment_leader = '// '
+  autocmd FileType sh,ruby,python   let b:comment_leader = '# '
+  autocmd FileType conf,fstab       let b:comment_leader = '# '
+  autocmd FileType tex,mat          let b:comment_leader = '% '
+  autocmd FileType mail             let b:comment_leader = '> '
+  autocmd FileType vim              let b:comment_leader = '" '
+augroup END
+noremap <silent> ,cc :<C-B>silent <C-E>s/^/<C-R>=escape(b:comment_leader,'\/')<CR>/<CR>:nohlsearch<CR>
+noremap <silent> ,cu :<C-B>silent <C-E>s/^\V<C-R>=escape(b:comment_leader,'\/')<CR>//e<CR>:nohlsearch<CR>
+"}}}
+
+" Editing {{{
+set backspace=indent,eol,start
+" }}}
+
+"}}}
+
+" Syntax {{{
+
+syntax on
+set number norelativenumber
+set autoindent expandtab
+set tabstop=2 shiftwidth=2 softtabstop=2
+
+set showmatch       " show matching brackets
+set hlsearch        " Highlight matches
+set incsearch       " Search as characters are entered
+
+" Turn off highlighting for search matches
+nnoremap <leader>/ :nohlsearch<CR>
+
+" Filetype Specific Settings {{{
+set modelines=1     " Check last line for mode for current file
+filetype indent on    " load filetype specific indent files
+" Filetype Specific Settings (Imported) {{{
+augroup configgroup
+    autocmd!
+    autocmd VimEnter * highlight clear SignColumn
+    autocmd BufWritePre *.php,*.py,*.js,*.txt,*.hs,*.java,*.md
+                \:call <SID>StripTrailingWhitespaces()
+    autocmd FileType java setlocal noexpandtab
+    autocmd FileType java setlocal list
+    autocmd FileType java setlocal listchars=tab:+\ ,eol:-
+    autocmd FileType java setlocal formatprg=par\ -w80\ -T4
+    autocmd FileType php setlocal expandtab
+    autocmd FileType php setlocal list
+    autocmd FileType php setlocal listchars=tab:+\ ,eol:-
+    autocmd FileType php setlocal formatprg=par\ -w80\ -T4
+    autocmd FileType ruby setlocal tabstop=2
+    autocmd FileType ruby setlocal shiftwidth=2
+    autocmd FileType ruby setlocal softtabstop=2
+    autocmd FileType ruby setlocal commentstring=#\ %s
+    autocmd FileType python setlocal commentstring=#\ %s
+    autocmd BufEnter *.cls setlocal filetype=java
+    autocmd BufEnter *.zsh-theme setlocal filetype=zsh
+    autocmd BufEnter Makefile setlocal noexpandtab
+    autocmd BufEnter *.sh setlocal tabstop=2
+    autocmd BufEnter *.sh setlocal shiftwidth=2
+    autocmd BufEnter *.sh setlocal softtabstop=2
+    autocmd BufEnter *shrc setlocal syntax=sh
+    autocmd BufEnter env.* setlocal syntax=sh
+    autocmd BufEnter *aliases setlocal syntax=sh
+    autocmd BufEnter *.profile setlocal syntax=sh
+    autocmd BufEnter condarc setlocal syntax=yaml
+    autocmd BufEnter gdbinit setlocal syntax=gdb
+augroup END
+"}}}
+"}}}
+
+"}}}
+
+" Backups {{{
+
+set backup
+set backupdir=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set backupskip=/tmp/*,/private/tmp/*
+set directory=~/.vim-tmp,~/.tmp,~/tmp,/var/tmp,/tmp
+set writebackup
+
+"}}}
+
+" Functions {{{
+
+" Toggle between Absolute Line Numbers and Relative Line Numbers
+function! NumberToggle()
+  " Determine the Current Setting
+  let rn = execute(":set relativenumber?")[1:]
+  " Set the inverse of the Current Setting
+  execute(":set "..rn.."!")
+endfunc
+command TNum call NumberToggle()
+command NT call NumberToggle()
+command NumberToggle call NumberToggle()
+command ToggleNumber call NumberToggle()
+
+" Alternative version
+" toggle between number and relativenumber
+function! ToggleNumber()
+    if(&relativenumber == 1)
+        set norelativenumber
+        set number
+    else
+        set relativenumber
+    endif
+endfunc
+
+" strips trailing whitespace at the end of files. this
+" is called on buffer write in the autogroup above.
+function! <SID>StripTrailingWhitespaces()
+    " save last search & cursor position
+    let _s=@/
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+    let @/=_s
+    call cursor(l, c)
+endfunction
+
+"}}}
+
+" vim:foldmethod=marker:foldlevel=1

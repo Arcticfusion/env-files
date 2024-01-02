@@ -1,0 +1,88 @@
+#!/bin/sh
+if ! [ -n "${_RC_INIT}" ]; then
+  export _RC_INIT="True"
+else
+  >&2 echo "Already Initialising rc"
+  exit
+fi
+>&2 echo "Initialising rc"
+unset name_
+# RC START
+# This is for interactive shells
+
+# Initialise Environment Tools
+test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
+test -z "$ENV_TOOLS" && source "$ENV_REPO/env.tools"
+
+load_env_file env.path
+
+_USER_NAME=$( echo -n "$USER" | tr '[:upper:]' '[:lower:]' |  tr ' ' '-' )
+_HOST_NAME="${HOST}"
+test -z "${_HOST_NAME}" && _HOST_NAME="${HOSTNAME}" # Only one should exist
+
+case "$_HOST_NAME" in
+  *MacBook-*)
+    _HOST_NAME=$(echo $"_HOST_NAME" | sed -E 's/MacBook-(\w*)-(\d*)-?/MBP-\1-\2/')
+  ;;
+  DESKTOP-)
+    _HOST_NAME=$(echo $"_HOST_NAME" | sed -E 's/DESKTOP-*/WIN-')
+  ;;
+  *)
+  ;;
+esac
+
+case "$_USER_NAME" in
+  unknown*|)
+    _USER_NAME="unknown"
+  ;;
+  root)
+    _USER_NAME="root"
+  ;;
+  *)
+    # First word -> first 7 characters
+    _USER_NAME="$(
+      echo "$_USER_NAME" |
+      sed -E -e 's/^\W*(\w+)(\W.*)?//' \
+      -e 's/(.{7}).*/\1/'
+    )"
+  ;;
+esac
+
+export _HOST_NAME
+export _USER_NAME
+
+OS_NAME=$(uname | lower )
+if [[ "$OS_NAME" == "darwin"* ]] ; then
+  quiet which sw_vers &&
+    OS_NAME=$(sw_vers -productName | lower )
+fi
+export OS_NAME
+
+case "$OS_NAME" in
+  macos*)
+    test -f "${ENV_REPO}/macos.sh" && source "${ENV_REPO}/macos.sh"
+  ;;
+  linux*)
+    test -f "${ENV_REPO}/linux.sh" && source "${ENV_REPO}/linux.sh"
+  ;;
+  *)
+    echo "OS:$OS_NAME has no env preferences" 1>&2
+  ;;
+esac
+
+if ! type realpath &>/dev/null; then
+  type readlink &>/dev/null && alias realpath="readlink -f"
+fi
+
+
+if [ -f "${ENV_REPO}/aliases" ]; then
+  source "${ENV_REPO}/aliases"
+fi
+
+if [ -f "${ENV_REPO}/tools" ]; then
+  source "${ENV_REPO}/tools"
+fi
+
+
+# RC END
+unset _RC_INIT

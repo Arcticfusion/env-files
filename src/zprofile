@@ -1,0 +1,23 @@
+#!/bin/zsh
+name_="zprofile"
+if ! [ -n "${_ZPROFILE_INIT}" ]; then
+  export _ZPROFILE_INIT="True"
+else
+  >&2 echo "Already Initialising $name_"
+  return
+fi
+>&2 echo "Initialising $name_"
+unset name
+# ZSH PROFILE START
+
+setopt extended_glob
+setopt extendedglob
+
+export ENV_REPO=$(readlink -f "$HOME/.zprofile" 2>/dev/null | sed 's#/[^/]*$##')
+
+if [[ -f "${ENV_REPO}/profile" ]]; then
+  test -z "$_PROFILE_INIT" && source "${ENV_REPO}/profile"
+fi
+
+# ZSH PROFILE END
+unset _ZPROFILE_INIT

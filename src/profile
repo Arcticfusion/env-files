@@ -1,0 +1,92 @@
+#!/bin/sh
+# ~/.profile: executed by the command interpreter for login shells.
+# This file is not read by bash(1), if ~/.bash_profile or ~/.bash_login
+# exists.
+# see /usr/share/doc/bash/examples/startup-files for examples.
+# the files are located in the bash-doc package.
+
+name_="profile"
+if ! [ -n "$_PROFILE_INIT" ]; then
+  export _PROFILE_INIT="True"
+else
+  >&2 echo "Already Initialising $name_"
+  return
+fi
+>&2 echo "Initialising $name_"
+unset name_
+# PROFILE START
+
+# the default umask is set in /etc/profile; for setting the umask
+# for ssh logins, install and configure the libpam-umask package.
+#umask 022
+
+# Redefine this if realpath does not exist
+if ! type realpath &>/dev/null; then
+  type readlink &>/dev/null && alias realpath="readlink -f"
+fi
+
+# Initialise Environment Tools
+test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
+test -z "$ENV_TOOLS" && source "$ENV_REPO/env.tools"
+
+load_env_file colors.sh
+
+# if running bash
+if [[ "$SHELL_NAME" == "bash" ]]; then
+  quiet test -z "$_BASH_PROFILE_INIT" && load_env_file "bash.profile"
+fi
+if [[ "$SHELL_NAME" == "zsh" ]]; then
+  quiet test -z "$_ZPROFILE_INIT" && load_env_file "zprofile"
+fi
+
+KERNEL=$(uname | lower )
+case "$KERNEL" in
+  darwin*)
+    load_env_file darwin.profile
+  ;;
+  linux*)
+    load_env_file linux.profile
+  ;;
+  *)
+    echo "OS:$OS_NAME has no env preferences" 1>&2
+  ;;
+esac
+
+# set PATH so it includes user's private bins if they exist
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+if [ -d "$HOME/Applications/bin" ] ; then
+  PATH="$HOME/Applications/bin:$PATH"
+fi
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Current Company
+# Store the following and other company specific data in ~/.company
+#   export COMPANY_NAME=''
+#   export COMPANY_NICKNAME="${COMPANY_NAME}"
+#   export COMPANY_DOMAIN="${COMPANY_NAME/1/.com}"
+test -e "${HOME}/.company" && source "${HOME}/.company"
+
+
+# 1Password Integration
+if quiet test checkt op && test "${COMPANY_NAME}" ; then
+  eval "$(op completion $SHELL_NAME )"
+  quiet test -f "$HOME/.op_session" && source "$HOME/.op_session"
+  while read ops; do
+    export $ops
+  done < <(find_evar OP_SESSION | sed -E 's/=.*//')
+  eval "$(op signin --account "$USER@$COMPANY_DOMAIN")"
+fi
+
+quiet test -e "${HOME}/.iterm2_shell_integration.$SHELL_NAME" \
+  && source "${HOME}/.iterm2_shell_integration.$SHELL_NAME"
+
+# Run 'eval \$(op signin --account "${COMPANY_NAME}")' to sign in to your 1Password account.
+# Use the --raw flag to only output the session token.L_NAME" || true
+
+# PROFILE END
+unset _PROFILE_INIT
+
