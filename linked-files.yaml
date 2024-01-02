@@ -1,0 +1,92 @@
+sh:
+  env_files:
+    to: '$HOME/.env-files'
+    from: '.'
+  vscode:
+    to: '$HOME/.vscode'
+    from: 'src/vscode'
+  vscode_server:
+    to: '$HOME/.vscode-server'
+    from: 'src/vscode-server'
+  rc:
+    to: '$HOME/.rc'
+    from: 'src/rc'
+  config:
+    to: '$HOME/.config'
+    from: 'src/config'
+vim:
+  vimrc:
+    to: '$HOME/.vimrc'
+    from: 'src/vimrc'
+  vim_autoload:
+    to: '$HOME/.vim/autoload'
+    from: 'src/vim/autoload'
+  vim_bundle: 
+    to: '$HOME/.vim/bundle'
+    from: 'src/vim/bundle'
+  vim_colors: 
+    to: '$HOME/.vim/colors'
+    from: 'src/vim/colors'
+  vim_ftdetect: 
+    to: '$HOME/.vim/ftdetect '
+    from: 'src/vim/ftdetect '
+  vim_syntax: 
+    to: '$HOME/.vim/syntax'
+    from: 'src/vim/syntax'
+bash:
+  bashrc:
+    to: '$HOME/.bashrc'
+    from: 'src/bashrc'
+  bash_logout:
+    to: '$HOME/.bash_logout'
+    from: 'src/bash.logout'
+  bash_profile: 
+    to: '$HOME/.bash_profile'
+    from: 'src/bash.profile'
+  profile: 
+    to: '$HOME/.profile'
+    from: 'src/profile'
+  iterm2_shell_integration:
+    to: '$HOME/.iterm2_shell_integration.bash'
+    from: 'src/iterm2_shell_integration.bash'
+zsh:
+  zshrc: 
+    to: '$HOME/.zshrc'
+    from: 'src/zshrc'
+  zprofile: 
+    to: '$HOME/.zprofile'
+    from: 'src/zprofile'
+  iterm2_shell_integration:
+    to: '$HOME/.iterm2_shell_integration.zsh'
+    from: 'src/iterm2_shell_integration.zsh'
+ssh:
+  ssh_config:
+    to: '$HOME/.ssh/config'
+    from: 'src/ssh.config'
+conda:
+  condarc:
+    to: '$HOME/.condarc'
+    from: 'src/condarc'
+conan:
+  conan_conf: 
+    to: '$HOME/.conan/conan.conf'
+    from: 'src/conan.config'
+git:
+  gitconf:
+    to: '$HOME/.gitconfig'
+    from: 'src/git.config'
+  jira_ticket_sand:
+    to: '/sandbox/$USER/jira.ticket'
+    from: 'src/data/jira.ticket'
+  jira_ticket_home:
+    to: '$HOME/.jira-ticket'
+    from: 'src/data/jira.ticket'
+docker:
+  docker:
+    to: '$HOME/.docker'
+    from: 'src/docker'
+gdb:
+  gdbinit:
+    to: '$HOME/.gdbinit'
+    from: 'src/gdbinit'
+
