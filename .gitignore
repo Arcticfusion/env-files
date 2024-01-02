@@ -1,7 +1,7 @@
 .CFUserTextEncoding
 .DS_Store
 .vscode/
-data
+data/**
 src/config/iterm*
 src/config/op
 src/vscode-server
