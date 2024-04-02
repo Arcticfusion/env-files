@@ -22,14 +22,15 @@ test -z "${_HOST_NAME}" && _HOST_NAME="${HOSTNAME}" # Only one should exist
 
 case "$_HOST_NAME" in
   *MacBook-*)
-    _HOST_NAME=$(echo $"_HOST_NAME" | sed -E 's/MacBook-(\w*)-(\d*)-?/MBP-\1-\2/')
+    _HOST_NAME="$(echo "${_HOST_NAME}" | sed -E 's/MacBook-(\w*)-(\d*)-?/MB-\1-\2/')"
   ;;
   DESKTOP-)
-    _HOST_NAME=$(echo $"_HOST_NAME" | sed -E 's/DESKTOP-*/WIN-')
+    _HOST_NAME="$(echo "${_HOST_NAME}" | sed -E 's/DESKTOP-*/WIN-')"
   ;;
   *)
   ;;
 esac
+_HOST_NAME="$(echo "${_HOST_NAME}" | sed -E 's/\.local$//')"
 
 case "$_USER_NAME" in
   unknown*|)
