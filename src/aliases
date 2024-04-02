@@ -114,8 +114,10 @@ alias ge='egrep'
 alias gi='egrep -i'
 
 # python
-alias py='python3'
+alias py='python'
 alias pyi='python3 -i'
+alias pyy='python3'
+alias pyyi='python3 -i'
 
 # VS Code
 alias vs='code'
@@ -131,7 +133,7 @@ alias sha='shasum -a 256'
 alias untar='tar -xzvf'
 
 # Conda -> see .bashrc
-alias bb='conda activate bb'
+alias thesis='conda activate thesis'
 
 # Conan
 alias conen="conan editable"
@@ -211,10 +213,10 @@ quiet type realpath &&
 quiet which git && load_env_file "git.sh"
 
 # Other Tools
-load_env_file "tools.sh
+load_env_file "tools.sh"
 
 # Script Aliases
-load_env_file "scripts.sh"
+# load_env_file "scripts.sh"
 
 # Unsorted Aliases
 as () {
