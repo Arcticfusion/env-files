@@ -1,4 +1,5 @@
 #!/bin/sh
+name_="rc"
 if ! [ -n "${_RC_INIT}" ]; then
   export _RC_INIT="True"
 else

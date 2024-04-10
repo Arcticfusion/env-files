@@ -132,8 +132,7 @@ alias sha='shasum -a 256'
 # compressed archives
 alias untar='tar -xzvf'
 
-# Conda -> see .bashrc
-alias thesis='conda activate thesis'
+# Conda -> see conda.sh
 
 # Conan
 alias conen="conan editable"

@@ -93,8 +93,9 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
-alias cona='conda activate'
-alias cond='conda deactivate'
+
+# Conda Block - Personalised
+load_env_file conda.sh
 
 
 if [ "$color_prompt" = yes ]; then
