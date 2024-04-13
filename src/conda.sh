@@ -58,4 +58,5 @@ alias cond='conda deactivate'
 # Specific Aliases
 alias thesis='conda activate thesis'
 
+unset _CONDA_SH_INIT
 # CONDA SH END
