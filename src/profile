@@ -27,7 +27,7 @@ fi
 
 # Initialise Environment Tools
 test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
-test -z "$ENV_TOOLS" && source "$ENV_REPO/env.tools"
+source "${ENV_REPO}/env.tools"
 
 load_env_file colors.sh
 
