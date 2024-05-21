@@ -78,11 +78,13 @@ alias pwda="echo -e \"$(pwd)\n$(pwd -P)\" | uniq"
 alias pwdr="pwd -P"
 
 # ls
-alias ls='ls -hGF --color=auto'
-alias la='ls -A'
-alias ll='ls -AlF'
-alias lld='ls -AlFt --time-style=+$DATE_FORMAT'
-alias l='ls -CF'
+quiet unalias ls
+alias _ls="$(which ls)"
+alias ls='_ls -hpGF --color=auto'
+alias la='_ls -A'
+alias ll='_ls -AlFp'
+alias lld='_ls -AlFt --time-style=+$DATE_FORMAT'
+alias l='_ls -CF'
 
 # vim
 alias vir='vim -R'
