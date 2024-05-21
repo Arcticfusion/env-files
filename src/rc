@@ -34,7 +34,7 @@ esac
 _HOST_NAME="$(echo "${_HOST_NAME}" | sed -E 's/\.local$//')"
 
 case "$_USER_NAME" in
-  unknown*|)
+  unknown*)
     _USER_NAME="unknown"
   ;;
   root)
@@ -52,6 +52,8 @@ esac
 
 export _HOST_NAME
 export _USER_NAME
+
+load_env_file data/vars.rc
 
 OS_NAME=$(uname | lower )
 if [[ "$OS_NAME" == "darwin"* ]] ; then
@@ -75,6 +77,7 @@ esac
 if ! type realpath &>/dev/null; then
   type readlink &>/dev/null && alias realpath="readlink -f"
 fi
+
 
 
 if [ -f "${ENV_REPO}/aliases" ]; then
