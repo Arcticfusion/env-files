@@ -117,7 +117,7 @@ alias gi='egrep -i'
 
 # python
 alias py='python'
-alias pyi='python3 -i'
+alias pyi='python -i'
 alias pyy='python3'
 alias pyyi='python3 -i'
 
