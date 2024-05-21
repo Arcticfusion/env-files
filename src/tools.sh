@@ -125,5 +125,39 @@ rstripf() {
   sed -Ei '' 's/ +$//' $( realpath "$@" | tr '\n' ' ' )
 }
 
+info() {
+  while test $# -gt 0;do
+    f="$1"
+    # If a file exists
+    if test -e "$f"; then
+      abspath="$(realpath "$(dirname "$f")")"
+      test -d "$f" || abspath="${abspath}/$(basename "$f")"
+      echo "Absolute Path: ${abspath}"
+      # If a Directory
+      if test -h "$f"; then
+        fr="$(readlink "$f")"
+        echo "Symbolic Link: ${f} -> ${fr}"
+        f="${fr}"
+        fr_path="$(realpath "$f")"
+        test "${fr}" != "${fr_path}" &&
+          echo "Target Absolute Path: ${fr_path}"
+      fi
+      if test -d "$f"; then
+        echo "Directory: $f"
+        ls -ldTe "$f"
+      else
+
+      fi
+    # Check if
+    elif quiet which "$f"; then
+
+    else
+      ercho "Unknown input: $f"
+    fi
+
+    shift
+  done
+}
+
 # TOOLS SH END
 unset _TOOLS_SH_INIT
