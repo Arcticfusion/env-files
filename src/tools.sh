@@ -159,5 +159,40 @@ info() {
   done
 }
 
+# Funcions to Modify Shell Prompt
+export PS1_LONG="${PS1}"
+export PS1_SHORT="${PS1}"
+unset PS1_PREV
+prompt () {
+  if test -n "${PS1_PREV}"; then
+    export PS1="${PS1_PREV}"
+    unset PS1_PREV
+  else
+    export PS1="${PS1_LONG}"
+  fi
+}
+lprompt () {
+  PS1_PREV="${PS1}"
+  export PS1="${PS1_LONG}"
+}
+sprompt () {
+  PS1_PREV="${PS1}"
+  export PS1="${PS1_SHORT}"
+}
+nprompt (){
+  PS1_PREV="${PS1}"
+  case "${SHELL_NAME}" in
+    bash)
+      export PS1='# '
+    ;;
+    zsh)
+      export PS1='%# '
+    ;;
+    *)
+      export PS1='> '
+    ;;
+esac
+}
+
 # TOOLS SH END
 unset _TOOLS_SH_INIT
