@@ -55,8 +55,14 @@ quiet which conda || return $?
 alias cona='conda activate'
 alias cond='conda deactivate'
 
+alias condenvs="conda env list | egrep -v '^#' | grep '.' | cut -f1 -d' '"
+
 # Specific Aliases
-alias thesis='conda activate thesis'
+test -d "${THESIS_DIR}" &&
+  alias thesis='conda activate thesis; cd ${THESIS_DIR}' ||
+  alias thesis='conda activate thesis'
+condenvs | quiet egrep '^thesis$' ||
+  unalias thesis
 
 unset _CONDA_SH_INIT
 # CONDA SH END
