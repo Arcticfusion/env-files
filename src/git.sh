@@ -35,7 +35,6 @@ gu () {
 }
 
 # Pull, Push, & Fetch
-# alias gp='git pull && git push'
 gp () {
   git pull &&
     test -n "$(git status | grep 'git push')" &&
@@ -43,12 +42,15 @@ gp () {
     ercho "$(rname) Syncing Done"
 }
 alias gpull='git pull'
+alias gpl='git pull'
 alias gpush='git push'
+alias gph='git push'
 alias gip='git pull && git push --'
 alias gpuf='git push -f'
 alias gfet='git fetch'
 alias getch='git fetch'
 alias gforce='git push -f'
+alias gforced='gforce; gforce upstream --'
 alias glog='git log HEAD~1..HEAD'
 
 alias gits='git status'
@@ -61,6 +63,7 @@ alias grpush='git push --set-upstream origin' #branch_name
 alias gdif='git diff'
 alias gitd='git diff'
 alias gid='git diff'
+alias gids='git diff --compact-summary'
 alias glod='git diff --compact-summary HEAD~1'
 alias glas='git diff --compact-summary HEAD~1'
 alias glast='git diff --compact-summary HEAD~1; git diff HEAD~1'
@@ -75,6 +78,7 @@ alias gitl='git log'
 alias stash='git stash --keep-index push'
 alias gash='git stash push'
 alias gpop='git stash pop'
+alias gcp='git cherry-pick'
 alias grmc='git reset --hard HEAD~1'
 alias gfin='git rebase --continue'
 alias gskip='git rebase --skip'

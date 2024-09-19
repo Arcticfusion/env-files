@@ -41,7 +41,8 @@ cd_toggle () {
   fi
 }
 alias cdt='cd_toggle'
-alias erd='cd_toggle $ENV_REPO'
+alias erd='cd_toggle "${ENV_REPO}"'
+alias cder='cd_toggle "${ENV_REPO}"'
 
 quiet unalias sd
 sd () {
@@ -114,6 +115,8 @@ alias grep='grep --directories=skip --color=auto'
 alias egrep='egrep --directories=skip --color=auto'
 alias ge='egrep'
 alias gi='egrep -i'
+alias ger='egrep -r'
+alias gir='egrep -ir'
 
 # python
 alias py='python'
@@ -135,6 +138,7 @@ alias sha='shasum -a 256'
 alias untar='tar -xzvf'
 
 # Conda -> see conda.sh
+# Intialised in shell rc files
 
 # Conan
 alias conen="conan editable"
@@ -151,6 +155,7 @@ add-ssh ()
   AddKeysToAgent yes
 " >> "$HOME/.ssh/config"
 }
+alias ssh-new-key='ssh-keygen -t rsa -C "${USER}@${HOSTNAME}${HOST}"'
 
 # Docker
 alias dockar='docker login 0.0.0.0 -u $USER'
@@ -201,13 +206,18 @@ fvar () {
   done < <(compgen -v)
 }
 
+alias user='echo "${USER}"'
 alias path='echo "PATH=${PATH}"'
 paths () {
   eval 'echo "PATH=${PATH}"'
   eval 'echo "MANPATH=${MANPATH}"'
   eval 'echo "INFOPATH=${INFOPATH}"'
 }
+alias version='cat /etc/os-release'
+alias cores='nproc'
+alias clean='clear -x'
 alias xx='exit'
+alias pingn='ping -c'
 
 # Find the absolute location of simlinked files
 quiet type readlink &&
@@ -219,13 +229,19 @@ quiet type realpath &&
 # Git Aliases and Commands
 quiet which git && load_env_file "git.sh"
 
+# gdb commands
+unalias gdb
+checkt gdb && 
+  alias __gdb="$(which gdb)" &&
+  alias gdb='gdb -x $ENV_REPO/gdb.tools'
+
 # Other Tools
 load_env_file "tools.sh"
 
 # Script Aliases
 # load_env_file "scripts.sh"
 
-# Unsorted Aliases
+# Create An Unsorted Alias
 as () {
   local alias_="alias $(echo "$*" | sed -E 's/[= ](.*)/='"'"'\1'"'"'/')"
   #local alias_="alias \"$@\""
