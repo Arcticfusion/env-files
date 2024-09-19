@@ -51,15 +51,21 @@ alias gfet='git fetch'
 alias getch='git fetch'
 alias gforce='git push -f'
 alias gforced='gforce; gforce upstream --'
-alias glog='git log HEAD~1..HEAD'
 
+# Logs & Status
+alias glog='git log HEAD~1..HEAD'
+alias glogs='git log'
+alias gitl='git log'
 alias gits='git status'
 alias gs='git status'
+
+# Remotes
 alias grems="git remote -v"
 alias grem='git remote'
 alias gradd="git remote add" #name #url
 alias grpush='git push --set-upstream origin' #branch_name
 
+# Differences
 alias gdif='git diff'
 alias gitd='git diff'
 alias gid='git diff'
@@ -68,16 +74,19 @@ alias glod='git diff --compact-summary HEAD~1'
 alias glas='git diff --compact-summary HEAD~1'
 alias glast='git diff --compact-summary HEAD~1; git diff HEAD~1'
 
+# Branches
 alias gib='git branch'
 alias gb='git branch'
 alias b="git branch"
-alias gadd='git add'
-alias gapp='git add -p'
-alias glogs='git log'
-alias gitl='git log'
+
+# Stashes
 alias stash='git stash --keep-index push'
 alias gash='git stash push'
 alias gpop='git stash pop'
+
+# Staging & Rebasing
+alias gadd='git add'
+alias gapp='git add -p'
 alias gcp='git cherry-pick'
 alias grmc='git reset --hard HEAD~1'
 alias gfin='git rebase --continue'
