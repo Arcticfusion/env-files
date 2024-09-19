@@ -12,6 +12,8 @@ unset name_
 
 export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
 test -z "${ENV_TOOLS}" && source "$ENV_REPO/env.tools"
+## zsh Tab Completion ##
+load_env_file zsh.comp
 autoload -Uz compinit && compinit
 autoload -Uz bashcompinit && bashcompinit
 

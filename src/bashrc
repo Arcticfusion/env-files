@@ -201,7 +201,7 @@ if [ -z "${_INIT_DIR}" ] \
 fi
 
 # Use original cd path completion
-complete -r cd
+# complete -r cd
 
 # BASHRC END
 test -n "${ENV_DEBUG}" &&

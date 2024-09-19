@@ -1,0 +1,11 @@
+export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
+# The following lines were added by compinstall
+
+zstyle ':completion:*' menu select=long
+zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+zstyle ':completion:*' use-compctl true
+zstyle :compinstall filename "${ENV_REPO}/zsh.comp"
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
