@@ -10,11 +10,11 @@ fi
 unset name_
 # ZSHRC START
 
+export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
+test -z "${ENV_TOOLS}" && source "$ENV_REPO/env.tools"
 autoload -Uz compinit && compinit
 autoload -Uz bashcompinit && bashcompinit
 
-export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
-&>/dev/null source "$ENV_REPO/env.tools" || 1>&2 echo "ERROR: Unable to initialise '$ENV_REPO/env.tools'"
 
 ## Format shell prompt ##
 if [ -f "$ENV_REPO/rc" ]; then
