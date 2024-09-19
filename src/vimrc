@@ -108,6 +108,7 @@ set incsearch       " Search as characters are entered
 " Turn off highlighting for search matches
 nnoremap <leader>/ :nohlsearch<CR>
 
+    " save last search & cursor position
 " Filetype Specific Settings {{{
 set modelines=1     " Check last line for mode for current file
 filetype indent on    " load filetype specific indent files
@@ -115,8 +116,13 @@ filetype indent on    " load filetype specific indent files
 augroup configgroup
     autocmd!
     autocmd VimEnter * highlight clear SignColumn
-    autocmd BufWritePre *.php,*.py,*.js,*.txt,*.hs,*.java,*.md
-                \:call <SID>StripTrailingWhitespaces()
+    autocmd BufWritePre 
+                  \*vimrc,*.vim,*.sh,.*rc,
+                  \*.php,*.html,*.js,*.ts,*.hs,
+                  \*.txt,*.md,
+                  \*.c,*.cpp,*.h,*.java,*.py
+                  \:%s/\s\+$//e
+"                 \:call <SID>StripTrailingWhitespaces()
     autocmd FileType java setlocal noexpandtab
     autocmd FileType java setlocal list
     autocmd FileType java setlocal listchars=tab:+\ ,eol:-
@@ -139,9 +145,12 @@ augroup configgroup
     autocmd BufEnter *shrc setlocal syntax=sh
     autocmd BufEnter env.* setlocal syntax=sh
     autocmd BufEnter *aliases setlocal syntax=sh
+    autocmd BufEnter aliases.* setlocal syntax=sh
     autocmd BufEnter *.profile setlocal syntax=sh
+    autocmd BufEnter *.comp setlocal syntax=sh
     autocmd BufEnter condarc setlocal syntax=yaml
     autocmd BufEnter gdbinit setlocal syntax=gdb
+    autocmd BufEnter gitconfig setlocal syntax=config
 augroup END
 "}}}
 "}}}
@@ -159,6 +168,21 @@ set writebackup
 "}}}
 
 " Functions {{{
+
+" strips trailing whitespace at the end of files. this
+" is called on buffer write in the autogroup above.
+function! <SID>StripTrailingWhitespaces()
+    let _s=@/
+    " save last search & cursor position
+    let l = line(".")
+    let c = col(".")
+    %s/\s\+$//e
+
+    let @/=_s
+    call cursor(l, c)
+endfunction
+
+runtime ~/.vim/functions/NumberToggle.vim
 
 " Toggle between Absolute Line Numbers and Relative Line Numbers
 function! NumberToggle()
@@ -182,18 +206,6 @@ function! ToggleNumber()
         set relativenumber
     endif
 endfunc
-
-" strips trailing whitespace at the end of files. this
-" is called on buffer write in the autogroup above.
-function! <SID>StripTrailingWhitespaces()
-    " save last search & cursor position
-    let _s=@/
-    let l = line(".")
-    let c = col(".")
-    %s/\s\+$//e
-    let @/=_s
-    call cursor(l, c)
-endfunction
 
 "}}}
 
