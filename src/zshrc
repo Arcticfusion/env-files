@@ -16,6 +16,7 @@ autoload -Uz bashcompinit && bashcompinit
 export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
 &>/dev/null source "$ENV_REPO/env.tools" || 1>&2 echo "ERROR: Unable to initialise '$ENV_REPO/env.tools'"
 
+## Format shell prompt ##
 if [ -f "$ENV_REPO/rc" ]; then
   source "$ENV_REPO/rc"
   __user="$_USER_NAME"
@@ -34,7 +35,8 @@ export PS1="%F{cyan}${__user}%f@%F{green}${__host}%f %F{yellow}%2~%f %# "
 unset __user __host
 
 test -e "${ENV_REPO}/iterm2_shell_integration.zsh" &&
-  source "${ENV_REPO}/iterm2_shell_integration.zsh" || test true
+  source "${ENV_REPO}/iterm2_shell_integration.zsh" &&
+  export PS1_BASE="${PS1}"
 
 test -e "/Users/${USER}/Applications/homebrew/bin/brew" &&
   eval "$(/Users/${USER}/Applications/homebrew/bin/brew shellenv)"

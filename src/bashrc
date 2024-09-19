@@ -102,6 +102,7 @@ if [ "$color_prompt" = yes ]; then
     if [[ "${_USER_NAME}" != "" ]]; then
       _USER_NAME=$(echo "${_USER_NAME}" | tr '[:upper:]' '[:lower:]' )
       PS1="\${debian_chroot:+(\$debian_chroot)}\\[\\033[01;32m\\]${_USER_NAME}@${_HOST_NAME}\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\\$ "
+      PS1_VAR='\${debian_chroot:+(\$debian_chroot)}\\[\\033[01;32m\\]${_USER_NAME}@${_HOST_NAME}\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\\$ '
     else
       PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
     fi
@@ -114,10 +115,14 @@ unset color_prompt force_color_prompt
 case "$TERM" in
 xterm*|rxvt*)
     PS1="\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]$PS1"
+    PS1_VAR='\[\e]0;${debian_chroot:+($debian_chroot)}\u@\h: \w\a\]'"${PS1_VAR}"
     ;;
 *)
     ;;
 esac
+
+# Save the original prompt layout
+export PS1_BASE="${PS1}"
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then

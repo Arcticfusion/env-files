@@ -82,8 +82,9 @@ if quiet test checkt op && test "${COMPANY_NAME}" ; then
   eval "$(op signin --account "$USER@$COMPANY_DOMAIN")"
 fi
 
-quiet test -e "${HOME}/.iterm2_shell_integration.$SHELL_NAME" \
-  && source "${HOME}/.iterm2_shell_integration.$SHELL_NAME"
+quiet test -e "${HOME}/.iterm2_shell_integration.$SHELL_NAME" &&
+  source "${HOME}/.iterm2_shell_integration.$SHELL_NAME" &&
+  export PS1_BASE="$PS1"
 
 # Run 'eval \$(op signin --account "${COMPANY_NAME}")' to sign in to your 1Password account.
 # Use the --raw flag to only output the session token.L_NAME" || true

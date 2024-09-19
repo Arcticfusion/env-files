@@ -14,6 +14,11 @@ unset name_
 # Initialise Environment Tools
 test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
 test -z "$ENV_TOOLS" && source "$ENV_REPO/env.tools"
+test -n "${SHELL_NAME}" &&
+  test -e "${ENV_REPO}/iterm2_shell_integration.${SHELL_NAME}" &&
+  echo   "Initialising iterm2.${SHELL_NAME}" &&
+  source  "${ENV_REPO}/iterm2_shell_integration.${SHELL_NAME}" &&
+  export PS1_BASE="${PS1}"
 
 load_env_file env.path
 

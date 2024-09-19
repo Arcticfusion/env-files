@@ -160,24 +160,24 @@ info() {
 }
 
 # Funcions to Modify Shell Prompt
-export PS1_LONG="${PS1}"
-export PS1_SHORT="${PS1}"
+export PS1_LONG='${CONDA_PROMPT_MODIFIER}${PS1_BASE}'
+export PS1_SHORT='${CONDA_PROMPT_MODIFIER}${PS1_BASE}'
 unset PS1_PREV
 prompt () {
   if test -n "${PS1_PREV}"; then
     export PS1="${PS1_PREV}"
     unset PS1_PREV
   else
-    export PS1="${PS1_LONG}"
+    export PS1="$(var_eval "${PS1_LONG}")"
   fi
 }
 lprompt () {
   PS1_PREV="${PS1}"
-  export PS1="${PS1_LONG}"
+  export PS1="$(var_eval "${PS1_LONG}")"
 }
 sprompt () {
   PS1_PREV="${PS1}"
-  export PS1="${PS1_SHORT}"
+  export PS1="$(var_eval "${PS1_SHORT}")"
 }
 nprompt (){
   PS1_PREV="${PS1}"
