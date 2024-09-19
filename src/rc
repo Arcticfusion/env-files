@@ -45,6 +45,12 @@ case "$_USER_NAME" in
   root)
     _USER_NAME="root"
   ;;
+  *.*)
+    _USER_NAME="$(
+      echo "$_USER_NAME" |
+      sed -E 's/^\W*(\w+)/\1/'
+    )"
+  ;;
   *)
     # First word -> first 7 characters
     _USER_NAME="$(

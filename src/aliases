@@ -232,6 +232,7 @@ as () {
   eval "$alias_" && echo "$alias_" >> "${ENV_REPO}/unsorted_aliases.sh"
 }
 quiet load_env_file "unsorted_aliases.sh"
+quiet load_env_file "data/aliases.priv"
 
 # ALIASES END
 test -n "${ENV_DEBUG}" &&
