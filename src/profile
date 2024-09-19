@@ -14,6 +14,7 @@ else
 fi
 >&2 echo "Initialising $name_"
 unset name_
+
 # PROFILE START
 
 # the default umask is set in /etc/profile; for setting the umask
@@ -88,5 +89,6 @@ quiet test -e "${HOME}/.iterm2_shell_integration.$SHELL_NAME" \
 # Use the --raw flag to only output the session token.L_NAME" || true
 
 # PROFILE END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tprofile is Initialised"
 unset _PROFILE_INIT
-

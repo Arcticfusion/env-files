@@ -234,4 +234,6 @@ as () {
 quiet load_env_file "unsorted_aliases.sh"
 
 # ALIASES END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\taliases is Initialised"
 unset _ALIASES_INIT

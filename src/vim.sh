@@ -8,11 +8,13 @@ else
   return
 fi
 >&2 echo "Initialising $name_"
-unset name
+unset name_
 # VIM SH START
 
 # Check for and install vim extensions
 # TODO
 
 # VIM SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tvim.sh is Initialised"
 unset _VIM_INIT

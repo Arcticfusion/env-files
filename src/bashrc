@@ -199,4 +199,6 @@ fi
 complete -r cd
 
 # BASHRC END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tbashrc is Initialised"
 unset _BASHRC_INIT

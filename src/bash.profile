@@ -1,10 +1,12 @@
+#!/bin/bash
+name_='bash.profile'
 if ! [ -n "${_BASH_PROFILE_INIT}" ]; then
   export _BASH_PROFILE_INIT="True"
 else
-  >&2 echo "Already Initialising ~/.bash_profile"
+  >&2 echo "Already Initialising $name_"
   return
 fi
->&2 echo "Initialising bash_profile"
+>&2 echo "Initialising $name_"
 unset name_
 # BASH PROFILE START
 
@@ -34,4 +36,6 @@ fi
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash" || true
 
 # BASH PROFILE END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tbash.profile is Initialised"
 unset _BASH_PROFILE_INIT

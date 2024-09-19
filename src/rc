@@ -90,4 +90,6 @@ fi
 
 
 # RC END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\trc is Initialised"
 unset _RC_INIT

@@ -27,4 +27,6 @@ test -e "${_HOMEBREW_EXEC}" &&
   errcho "Unable to find 'homebrew' executable"
 
 # HOMEBREW SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\thomebrew.sh is Initialised"
 unset _HOMEBREW_SH_INIT

@@ -56,4 +56,6 @@ test -e "$jirat" &&
   export JIRA_TICKET=$(getTicket)
 
 # JIRA SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tjira.sh is Initialised"
 unset _JIRA_INIT

@@ -8,7 +8,7 @@ else
   return
 fi
 >&2 echo "Evaluating $name_"
-unset name_
+test -z "${ENV_DEBUG}" && unset name_
 # BASH LOGOUT START
 
 # delete the temp directory made in bashrc
@@ -24,4 +24,4 @@ if [ "$SHLVL" = 1 ]; then
 fi
 
 # BASH LOGOUT END
-unset _BASH_LOGOUT_INIT
+unset _BASH_LOGOUT_INIT name_

@@ -8,9 +8,12 @@ else
 fi
 >&2 echo "Initialising $name_"
 unset name_
+
 # ENV SH START
 
 # Move initialisation of env files to this file
 
 # ENV SH END
-
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tenv.sh is Initialised"
+unset _ENV_SH_INIT

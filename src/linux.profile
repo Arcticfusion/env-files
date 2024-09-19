@@ -8,9 +8,11 @@ else
   return
 fi
 >&2 echo "Initialising $name_"
-unset name
+unset name_
 # LINUX SH START
 
 
 # LINUX PROFILE END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tlinux.profile is Initialised"
 unset _LINUX_PROFILE_INIT

@@ -41,4 +41,6 @@ shmount () {
 }
 
 # DARWIN PROFILE END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tdarwin.profile is Initialised"
 unset _DARWIN_PROFILE_INIT

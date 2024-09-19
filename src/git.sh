@@ -229,4 +229,6 @@ cambot () {
 }
 
 # GIT SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tgit.sh is Initialised"
 unset _GIT_SH_INIT

@@ -195,4 +195,6 @@ esac
 }
 
 # TOOLS SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\ttools.sh is Initialised"
 unset _TOOLS_SH_INIT

@@ -90,4 +90,6 @@ dockShowHiddenApps() {
 alias nproc='sysctl -n hw.ncpu'
 
 # MACOS SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tmacos.sh is Initialised"
 unset _MACOS_SH_INIT

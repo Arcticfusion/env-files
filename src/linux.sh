@@ -8,7 +8,7 @@ else
   return
 fi
 >&2 echo "Initialising $name_"
-unset name
+unset name_
 # LINUX SH START
 
 # Set SAND location if not set
@@ -40,4 +40,6 @@ unset -f update_brew
 unset hbrew_exec
 
 # LINUX SH END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tlinux.sh is Initialised"
 unset _LINUX_INIT

@@ -62,5 +62,6 @@ unset __conda_setup
 load_env_file conda.sh
 
 # ZSHRC END
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tzshrc is Initialised"
 unset _ZSHRC_INIT
-

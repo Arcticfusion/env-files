@@ -64,5 +64,7 @@ test -d "${THESIS_DIR}" &&
 condenvs | quiet egrep '^thesis$' ||
   unalias thesis
 
+test -n "${ENV_DEBUG}" &&
+  >&2 echo -e "\tconda.sh is Initialised"
 unset _CONDA_SH_INIT
 # CONDA SH END
