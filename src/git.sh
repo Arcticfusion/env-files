@@ -10,6 +10,7 @@ fi
 unset name_
 # GIT SH BEGIN
 CURRENT_GIT_COMMAND=""
+export GIT_EDITOR=vim
 
 alias rdir='git rev-parse --show-toplevel'
 alias groot='rdir'
