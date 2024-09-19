@@ -159,6 +159,16 @@ info() {
   done
 }
 
+# expands variables
+var_eval () {
+  result="$1"
+  next_result="$(eval "echo -n ${result}" 2>/dev/null || echo "${result}")"
+  while [[ "${result}" != "${next_result}" ]]; do
+    result="${next_result}"
+    next_result="$(eval "echo -n ${result}" 2>/dev/null || echo ${result})"
+  done
+  echo "${result}"
+} 
 # Funcions to Modify Shell Prompt
 export PS1_LONG='${CONDA_PROMPT_MODIFIER}${PS1_BASE}'
 export PS1_SHORT='${CONDA_PROMPT_MODIFIER}${PS1_BASE}'
@@ -192,6 +202,59 @@ nprompt (){
       export PS1='> '
     ;;
 esac
+}
+
+NOTES_FILE="${HOME}/.notes"
+note () {
+  if test $# -gt 0; then
+    local date_format="${DATE_FORMAT_DASHED}"
+    test -n "$date_format" || date_format="${DATE_FORMAT}"
+    test -n "$date_format" || date_format='%Y-%m-%d-%H%M'
+    echo "$(date +"${date_format}")::$(echo "$*")" >> "${NOTES_FILE}"
+  else
+    more "${NOTES_FILE}"
+  fi
+}
+
+alias notes='"${EDITOR}" "${NOTES_FILE}"'
+
+# Convert a .mov to a .gif
+quiet which ffmpeg &&
+togif () {
+  test $# -gt 0 || exit $?
+  mov_file="$1"
+  shift
+  test $# -ge 1 &&
+    gif_file="$1"
+    shift
+  test -z "$gif_file" &&
+    gif_file="$(echo "$mov_file" | sed -E 's/\.mov$//').gif"
+  test -f "$mov_file" || exit 1
+  ffmpeg -i "$mov_file" -pix_fmt rgb8 -r 10 -f gif "$gif_file" "$@"
+}
+
+# Find all the executable files with this name in your path
+# More than just the one that gets used
+# In the future add options to do an exact basename match
+cfind () {
+  local first=$1
+  shift
+  local pattern="($(printf %s "$first" "${@/#/|}"))"
+  2>/dev/null find $(echo "$PATH" | tr ':' '\n') | egrep "[^/]*${pattern}[^/]*$"
+}
+
+# Reveal a file or directory in Finder
+reveal() {
+  # grab the first arg or default to pwd
+  local basedir=${1:-${PWD}}
+
+  if [[ -f "$basedir" ]]; then
+    # ..we passed a file, so use its containing directory
+    basedir=$(dirname "$basedir")
+  fi
+  # basedir is a directory in now, so open will activate Finder.
+  # The argument is quoted to accommodate spaces in the filename.
+  open "$basedir"
 }
 
 # TOOLS SH END
