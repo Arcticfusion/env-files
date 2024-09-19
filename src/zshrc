@@ -46,7 +46,7 @@ test -e "/Users/${USER}/Applications/homebrew/bin/brew" &&
 test -e "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" \
   && export PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin:${PATH}"
 
-# Conda Block - Automated
+## Conda Block - Automated ##
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/opt/homebrew/Caskroom/miniconda/base/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
@@ -63,7 +63,8 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 # Conda Block - Personalised
-load_env_file conda.sh
+checkt conda &&
+  load_env_file conda.sh
 
 # ZSHRC END
 test -n "${ENV_DEBUG}" &&

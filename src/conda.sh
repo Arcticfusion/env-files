@@ -59,10 +59,17 @@ alias condenvs="conda env list | egrep -v '^#' | grep '.' | cut -f1 -d' '"
 
 # Specific Aliases
 test -d "${THESIS_DIR}" &&
-  alias thesis='conda activate thesis; cd ${THESIS_DIR}' ||
+  alias thesis='conda activate thesis; cd "${THESIS_DIR}"' ||
   alias thesis='conda activate thesis'
-condenvs | quiet egrep '^thesis$' ||
+test -n "$(condenvs | egrep '^thesis$')" ||
   unalias thesis
+
+if test -n "${CONDA_DEFAULT_ENV}"; then
+  ENV_TO_RELOAD="${CONDA_DEFAULT_ENV}"
+  quiet conda deactivate &&
+  quiet conda activate "${ENV_TO_RELOAD}"
+  unset ENV_TO_RELOAD
+fi
 
 test -n "${ENV_DEBUG}" &&
   >&2 echo -e "\tconda.sh is Initialised"
