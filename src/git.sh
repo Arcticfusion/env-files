@@ -90,6 +90,7 @@ gbase () {
 alias gitch='git checkout'
 alias gch='git checkout'
 alias gm='git checkout master'
+alias gm='git checkout $(git branch --list master main | head -n1)'
 alias gl='git checkout $USER/local'
 quiet unalias gt
 gt () { git checkout "${GIT_USER_DEFAULT}/$(getTicket "$@")"; }
