@@ -79,12 +79,12 @@ alias pwdr="pwd -P"
 
 # ls
 quiet unalias ls
-alias _ls="$(which ls)"
-alias ls='_ls -hpGF --color=auto'
-alias la='_ls -A'
-alias ll='_ls -AlFp'
-alias lld='_ls -AlFt --time-style=+$DATE_FORMAT'
-alias l='_ls -CF'
+alias __ls="$(which ls) --color=auto"
+alias ls='__ls -hpGF'
+alias la='__ls -AhpGF'
+alias ll='__ls -AlFp'
+alias lld='__ls -AlFt --time-style=+$DATE_FORMAT'
+alias l='__ls -CF'
 
 # vim
 alias vir='vim -R'
@@ -186,7 +186,8 @@ evar () {
     do
         test -n "$(eval "echo -n \"\${$v}\"")" &&
           eval "echo \"$v=\${$v}\"" ||
-          env | egrep -i --color=auto "$v\w*=";
+          env | egrep -i --color=auto "^\w*$v\w*=" | egrep -i --color=auto "^[^=]+";
+          # env | egrep -i"\w*$v\w*=" | egrep -i color=auto "$v";
     done
 }
 fvar () {
@@ -200,7 +201,12 @@ fvar () {
   done < <(compgen -v)
 }
 
-alias path='echo PATH=$PATH'
+alias path='echo "PATH=${PATH}"'
+paths () {
+  eval 'echo "PATH=${PATH}"'
+  eval 'echo "MANPATH=${MANPATH}"'
+  eval 'echo "INFOPATH=${INFOPATH}"'
+}
 alias xx='exit'
 
 # Find the absolute location of simlinked files
