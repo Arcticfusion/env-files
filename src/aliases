@@ -250,6 +250,12 @@ as () {
 quiet load_env_file "unsorted_aliases.sh"
 quiet load_env_file "data/aliases.priv"
 
+# Conditional Aliases
+checkt rebuild &&
+  alias rb='rebuild'
+checkt bbd &&
+  alias kkd='bbd'
+
 # ALIASES END
 test -n "${ENV_DEBUG}" &&
   >&2 echo -e "\taliases is Initialised"
