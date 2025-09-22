@@ -12,6 +12,9 @@ unset name_
 CURRENT_GIT_COMMAND=""
 export GIT_EDITOR=vim
 
+get_repo_directory () {
+  git rev-parse --show-toplevel
+}
 alias rdir='git rev-parse --show-toplevel'
 alias groot='rdir'
 alias rname="rdir | sed 's#.*/##'"
@@ -78,6 +81,24 @@ alias glast='git diff --compact-summary HEAD~1; git diff HEAD~1'
 alias gib='git branch'
 alias gb='git branch'
 alias b="git branch"
+top_branch () {
+  git branch --list master main |
+    sed 's/..//' |
+    egrep '^(master|main)$' |
+    head -n1
+}
+bhead () {
+  local num_commits=1
+  test $# -gt 0 && is_pos_int $1 && num_commits=$1
+  local cmd="git log HEAD~${num_commits}..HEAD --oneline"
+  if test $num_commits -eq 1; then
+    >&2 echo "## Last Commit ##"
+  elif test $num_commits -gt 1; then
+    >&2 echo "## Last $num_commits Commits ##"
+  fi
+  >&2 eval "$cmd"
+  eval "$cmd" | cut -f1 -d' ' | tr '\n' ' ' | sed 's/.$/\n/'
+}
 
 # Stashes
 alias stash='git stash --keep-index push'
@@ -98,11 +119,16 @@ gbase () {
   local n_=$1 && shift
   git rebase "HEAD~$n_" --onto "$@"
 }
+gmodified () {
+  git status |
+    egrep '\W+modified:' | tr '\t' ' ' |
+    sed -E 's# *modified: *(.*) *$#\1#'
+}
+alias gmod='gmodified'
 
 # Checkout
 alias gitch='git checkout'
 alias gch='git checkout'
-alias gm='git checkout master'
 alias gm='git checkout $(git branch --list master main | head -n1)'
 alias gl='git checkout $USER/local'
 quiet unalias gt
