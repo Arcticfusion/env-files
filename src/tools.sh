@@ -135,7 +135,7 @@ cfind () {
   2>/dev/null find $(echo "$PATH" | tr ':' '\n') | egrep "[^/]*${pattern}[^/]*$"
 }
 
-# Reveal a file or directory in Finder
+# Reveal a file or directory in Finder / your file explorer
 reveal() {
   # grab the first arg or default to pwd
   local basedir=${1:-${PWD}}
