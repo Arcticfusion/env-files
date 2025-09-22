@@ -230,7 +230,7 @@ quiet type realpath &&
 quiet which git && load_env_file "git.sh"
 
 # gdb commands
-unalias gdb
+quiet unalias gdb
 checkt gdb && 
   alias __gdb="$(which gdb)" &&
   alias gdb='gdb -x $ENV_REPO/gdb.tools'
