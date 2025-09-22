@@ -1,0 +1,46 @@
+# Compatible with bash and zsh
+( check_shell zsh || check_shell bash ) &&
+cleanPATH () {
+
+  local _host_device="${HOST}${HOSTNAME}"
+
+  # Collect the different PATH variables saved to the environment
+  local path_names=$(env | sed 's/=.*//' | egrep 'PATHS?$')
+
+  # for path_name in ${path_names[@]}; do
+  for path_name in $(env | sed 's/=.*//' | egrep 'PATHS?$'); do
+    # Retrieve the value of the PATH variable
+    path_=$(eval echo \$\{"$path_name"\} | sed -E 's/(^:+|:+$)//')
+
+    # Apply a host based extra step
+    case "$_host_device" in
+      DESKTOP-*) # Default Windows Machine Name
+        # Windows Machine - Prioritise Linux Paths by making them first
+        _linux_path=$( echo $path_ | tr ':' '\n' | egrep -v '^/mnt' | sort | uniq )
+        _windows_path=$( echo $path_ | tr ':' '\n' | egrep '^/mnt' | sort | uniq )
+        eval "export $path_name=\"$(echo -n "${_linux_path}${_windows_path}" | tr '\n' ':')\""
+      ;;
+      *)
+        # Default Case - no extra steps needed
+      ;;
+    esac
+
+    # Remove Repeats but retain Path order
+    local path_arr=$(echo -n "${path_}" | tr ':' '\n' | grep '\S')
+    # Note that the below pattern has lost the original order of the paths
+    # This will be used as a reference for if the path is part of the new list
+    local path_pattern=$(echo -n "${path_arr}" | sed -E 's#/$##' | sort | uniq |
+                    tr '\n' '|' | sed -E 's#^(.*[^|])\|?$#^(\1)$#' )
+    local _path=""
+    while read p; do
+      if $(echo "$p" | egrep "${path_pattern}" &>/dev/null); then
+        test -d "$p" && _path="${_path}:$p"
+        path_pattern=$(echo -n "${path_pattern}" | sed -E "s#(\|?${p}|${p}\|)##")
+      fi
+    done < <(echo "${path_arr}")
+    _path=$(echo -n "$_path" | sed -E 's/^://' | sed -E 's/:+$//' | sed -E 's/:+/:/g')
+    # echo "export ${path_name}='$( echo -n "$_path")'"
+    eval "export ${path_name}='$( echo -n "$_path")'"
+  done
+
+}
