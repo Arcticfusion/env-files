@@ -187,6 +187,7 @@ __get_SGR_color () {
   done
   shift $((OPTIND-1))
   if test "$bg"; then
+    echo -n '' # Placeholder
   fi
 
 }
@@ -300,9 +301,11 @@ color8 () { # 8 bit color
   #   8- 15:  high intensity colors (as in ESC [ 90–97 m)
   #  16-231:  6 × 6 × 6 cube (216 colors): 16 + 36 × r + 6 × g + b (0 ≤ r, g, b ≤ 5)
   # 232-255:  grayscale from dark to light in 24 steps
+  echo -n '' # Placeholder
 }
 
 color24 () { # 24 bit color
   # ESC[38;2;⟨r⟩;⟨g⟩;⟨b⟩ m Select RGB foreground color
   # ESC[48;2;⟨r⟩;⟨g⟩;⟨b⟩ m Select RGB background color
+  echo -n '' # Placeholder
 }

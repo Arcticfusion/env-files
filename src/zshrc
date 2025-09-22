@@ -10,17 +10,17 @@ fi
 unset name_
 # ZSHRC START
 
-export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
-test -z "${ENV_TOOLS}" && source "$ENV_REPO/env.tools"
+test -z "${ENV_REPO}" &&
+  export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
+test -f "${ENV_REPO}/rc" && source "${ENV_REPO}/rc"
+
 ## zsh Tab Completion ##
 load_env_file zsh.comp
 autoload -Uz compinit && compinit
 autoload -Uz bashcompinit && bashcompinit
 
-
 ## Format shell prompt ##
 if [ -f "$ENV_REPO/rc" ]; then
-  source "$ENV_REPO/rc"
   __user="$_USER_NAME"
   __host="$_HOST_NAME"
 else

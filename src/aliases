@@ -19,8 +19,9 @@ if ! type realpath &>/dev/null; then
 fi
 
 # Initialise Environment Tools
-test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
-test -z "$ENV_TOOLS" && source "$ENV_REPO/env.tools"
+test -z "${ENV_REPO}" &&
+  export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
+test -z "${ENV_TOOLS}" && source "${ENV_REPO}/env.tools"
 
 load_env_file "env.repos" || continue
 load_env_file "colors.sh" || continue
@@ -234,9 +235,6 @@ quiet unalias gdb
 checkt gdb && 
   alias __gdb="$(which gdb)" &&
   alias gdb='gdb -x $ENV_REPO/gdb.tools'
-
-# Other Tools
-load_env_file "tools.sh"
 
 # Script Aliases
 # load_env_file "scripts.sh"

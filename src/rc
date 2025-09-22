@@ -12,15 +12,9 @@ unset name_
 # This is for interactive shells
 
 # Initialise Environment Tools
-test -z "${ENV_REPO}" && export ENV_REPO=$(readlink -f "$0" 2>/dev/null | sed 's#/[^/]*$##')
-test -z "${ENV_TOOLS}" && source "${ENV_REPO}/env.tools"
-test -n "${SHELL_NAME}" &&
-  test -e "${ENV_REPO}/iterm2_shell_integration.${SHELL_NAME}" &&
-  echo   "Initialising iterm2.${SHELL_NAME}" &&
-  source  "${ENV_REPO}/iterm2_shell_integration.${SHELL_NAME}" &&
-  export PS1_BASE="${PS1}"
-
-load_env_file env.path
+test -z "${ENV_REPO}" &&
+  export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null ))
+source "${ENV_REPO}/env.sh"
 
 _USER_NAME=$( echo -n "$USER" | tr '[:upper:]' '[:lower:]' |  tr ' ' '-' )
 _HOST_NAME="${HOST}"
@@ -64,8 +58,6 @@ esac
 export _HOST_NAME
 export _USER_NAME
 
-load_env_file data/vars.rc
-
 OS_NAME=$(uname | lower )
 if [[ "$OS_NAME" == "darwin"* ]] ; then
   quiet which sw_vers &&
@@ -89,16 +81,9 @@ if ! type realpath &>/dev/null; then
   type readlink &>/dev/null && alias realpath="readlink -f"
 fi
 
-
-
-if [ -f "${ENV_REPO}/aliases" ]; then
-  source "${ENV_REPO}/aliases"
-fi
-
-if [ -f "${ENV_REPO}/tools" ]; then
-  source "${ENV_REPO}/tools"
-fi
-
+load_env_file data/vars.rc
+load_env_file aliases
+load_env_file tools.sh
 
 # RC END
 test -n "${ENV_DEBUG}" &&

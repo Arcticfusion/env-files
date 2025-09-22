@@ -10,11 +10,8 @@ fi
 unset name_
 # BASH PROFILE START
 
-export ENV_REPO=$(readlink -f "$HOME/.bash_profile" 2>/dev/null | sed 's#/[^/]*$##')
-
-if [[ -f "${ENV_REPO}/profile" ]]; then
-  source "${ENV_REPO}/profile"
-fi
+export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
+test -f "${ENV_REPO}/profile" && source "${ENV_REPO}/profile"
 
 if [[ "$-" == *"i"* ]] && [[ -f "${ENV_REPO}/bashrc" ]]; then
   source "${ENV_REPO}/bashrc"

@@ -13,11 +13,8 @@ unset name_
 setopt extended_glob
 setopt extendedglob
 
-export ENV_REPO=$(readlink -f "$HOME/.zprofile" 2>/dev/null | sed 's#/[^/]*$##')
-
-if [[ -f "${ENV_REPO}/profile" ]]; then
-  test -z "$_PROFILE_INIT" && source "${ENV_REPO}/profile"
-fi
+export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
+test -f "${ENV_REPO}/profile" && source "${ENV_REPO}/profile"
 
 # ZSH PROFILE END
 test -n "${ENV_DEBUG}" &&

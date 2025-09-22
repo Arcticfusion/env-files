@@ -15,6 +15,7 @@ load_env_file 'funcs/cleanPATH.func'
 load_env_file 'funcs/laa.func'
 load_env_file 'funcs/prompt.func'
 
+
 # Testing shell functions
 tf () {
   if test $@; then
@@ -72,11 +73,11 @@ info() {
         echo "Directory: $f"
         ls -ldTe "$f"
       else
-
+        quiet echo placeholder
       fi
     # Check if
     elif quiet which "$f"; then
-
+      quiet echo placeholder
     else
       ercho "Unknown input: $f"
     fi
