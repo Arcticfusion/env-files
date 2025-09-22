@@ -13,6 +13,7 @@ unset name_
 # Additional Functions
 load_env_file 'funcs/cleanPATH.func'
 load_env_file 'funcs/laa.func'
+load_env_file 'funcs/prompt.func'
 
 # Testing shell functions
 tf () {
@@ -94,40 +95,6 @@ var_eval () {
   done
   echo "${result}"
 } 
-# Funcions to Modify Shell Prompt
-export PS1_LONG='${CONDA_PROMPT_MODIFIER}${PS1_BASE}'
-export PS1_SHORT='${CONDA_PROMPT_MODIFIER}${PS1_BASE}'
-unset PS1_PREV
-prompt () {
-  if test -n "${PS1_PREV}"; then
-    export PS1="${PS1_PREV}"
-    unset PS1_PREV
-  else
-    export PS1="$(var_eval "${PS1_LONG}")"
-  fi
-}
-lprompt () {
-  PS1_PREV="${PS1}"
-  export PS1="$(var_eval "${PS1_LONG}")"
-}
-sprompt () {
-  PS1_PREV="${PS1}"
-  export PS1="$(var_eval "${PS1_SHORT}")"
-}
-nprompt (){
-  PS1_PREV="${PS1}"
-  case "${SHELL_NAME}" in
-    bash)
-      export PS1='# '
-    ;;
-    zsh)
-      export PS1='%# '
-    ;;
-    *)
-      export PS1='> '
-    ;;
-esac
-}
 
 NOTES_FILE="${HOME}/.notes"
 note () {
