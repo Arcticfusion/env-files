@@ -80,6 +80,8 @@ esac
 load_env_file data/vars.rc
 load_env_file aliases
 load_env_file tools.sh
+load_env_file colors.sh
+
 
 # RC END
 test -n "${ENV_DEBUG}" &&
