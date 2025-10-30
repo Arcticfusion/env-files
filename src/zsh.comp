@@ -1,4 +1,4 @@
-export ENV_REPO=$(readlink -f "$HOME/.zshrc" 2>/dev/null | sed 's#/[^/]*$##')
+export ENV_REPO=$(dirname $(readlink -f "${HOME}/.zshrc" 2>/dev/null))
 # The following lines were added by compinstall
 
 zstyle ':completion:*' menu select=long

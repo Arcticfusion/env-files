@@ -77,10 +77,6 @@ case "$OS_NAME" in
   ;;
 esac
 
-if ! type realpath &>/dev/null; then
-  type readlink &>/dev/null && alias realpath="readlink -f"
-fi
-
 load_env_file data/vars.rc
 load_env_file aliases
 load_env_file tools.sh
