@@ -29,6 +29,10 @@ test -z "${KEY}" &&
 export KEY="$(date_str)-${SHELL_NAME}-$$" ||
 export KEY="${KEY}--${SHELL_NAME}-$$"
 
+export EDITOR='vim'
+export VIEWER='vim -R' # other options: more, less
+alias edit='"${EDITOR}"'
+
 # Move initialisation of env files to this file
 load_env_file env.path
 load_env_file env.repos

@@ -15,8 +15,7 @@ unset name_
 # cd
 alias cd='cd -L'
 alias cdr='cd /'
-alias cda='cd ~'
-alias sand="cd /sandbox/$USER/"
+alias sand='cd "${SAND}"'
 cd_toggle () {
   if test $# -ne 0; then
     cwd_="$(realpath "$(pwd)")"

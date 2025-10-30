@@ -49,17 +49,6 @@ case "$KERNEL" in
   ;;
 esac
 
-# set PATH so it includes user's private bins if they exist
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
-if [ -d "$HOME/Applications/bin" ] ; then
-  PATH="$HOME/Applications/bin:$PATH"
-fi
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-
 # Current Company
 # Store the following and other company specific data in ~/.company
 #   export COMPANY_NAME=''
@@ -77,10 +66,6 @@ if quiet test checkt op && test "${COMPANY_NAME}" ; then
   done < <(find_evar OP_SESSION | sed -E 's/=.*//')
   eval "$(op signin --account "$USER@$COMPANY_DOMAIN")"
 fi
-
-quiet test -e "${HOME}/.iterm2_shell_integration.$SHELL_NAME" &&
-  source "${HOME}/.iterm2_shell_integration.$SHELL_NAME" &&
-  export PS1_BASE="$PS1"
 
 # Run 'eval \$(op signin --account "${COMPANY_NAME}")' to sign in to your 1Password account.
 # Use the --raw flag to only output the session token.L_NAME" || true
