@@ -44,3 +44,4 @@ cleanPATH () {
   done
 
 }
+checkt cleanPATH

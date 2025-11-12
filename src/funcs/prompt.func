@@ -33,3 +33,5 @@ nprompt (){
     ;;
 esac
 }
+
+checkt lprompt sprompt nprompt prompt
