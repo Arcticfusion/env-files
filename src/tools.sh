@@ -9,6 +9,8 @@ fi
 >&2 echo "Initialising $name_"
 unset name_
 # TOOLS SH START
+# This assumes that env.tools has updated the environment
+test -n "$ENV_TOOLS" || { >&2 echo "env.tools is not initialised" && return false}
 
 # Additional Functions
 load_env_file 'funcs/cleanPATH.func'
