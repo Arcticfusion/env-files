@@ -3,10 +3,10 @@ name_="rc"
 if ! [ -n "${_RC_INIT}" ]; then
   export _RC_INIT="True"
 else
-  >&2 echo "Already Initialising rc"
+  >&2 echo "Already Initialising ${name_}"
   exit
 fi
->&2 echo "Initialising rc"
+>&2 echo "Initialising ${name_}"
 unset name_
 # RC START
 # This is for interactive shells
