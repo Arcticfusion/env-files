@@ -12,7 +12,10 @@ unset name_
 # ENV SH START
 
 # Define the current environment
-export SHELL="$(which $(ps $$ | tail -n1 | awk '{print $5}' | sed 's/^-//'))"
+# REVIEW: ps $$ is formated differently on different machines
+SHELL="$(which $(ps $$ | tail -n1 | awk '{print $5}' | sed 's/^-//'))"
+type "${SHELL}" 2>/dev/null || SHELL="$0"
+export SHELL
 export SHELL_NAME="$(echo "$SHELL" | sed -E 's#(.*/)?([^/]*)sh$#\2sh#')"
 
 test -z "${ENV_REPO}" &&
@@ -35,7 +38,8 @@ alias edit='"${EDITOR}"'
 
 # Move initialisation of env files to this file
 load_env_file env.path
-load_env_file env.repos
+load_env_file env.repos # May delete this, repos implemented in per machine scripts
+load_env_file colors.sh
 
 # ENV SH END
 test -n "${ENV_DEBUG}" &&
