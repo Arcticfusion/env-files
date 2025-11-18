@@ -73,9 +73,8 @@ if [ -n "$force_color_prompt" ]; then
     fi
 fi
 
-if [ -f ~/.rc ]; then
-  source ~/.rc
-fi
+test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
+test -s "${HOME}/.rc" && source "${HOME}/.rc"
 
 test -e "/sandbox/$USER/tools/miniconda3/bin/conda" &&
 eval "$(/sandbox/$USER/tools/miniconda3/bin/conda shell.bash hook 2>/dev/null)"

@@ -9,9 +9,10 @@ fi
 >&2 echo "Initialising ${name_}"
 unset name_
 # RC START
-# This is for interactive shells
+# This is for all interactive shells
 
 # Initialise Environment Tools
+test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
 test -z "${ENV_REPO}" &&
   export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null ))
 source "${ENV_REPO}/env.sh"

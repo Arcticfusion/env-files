@@ -22,6 +22,7 @@ unset name_
 #umask 022
 
 # Initialise Environment Tools
+test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
 test -z "${ENV_REPO}" &&
   export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
 test -f "${ENV_REPO}/env.sh" && source "${ENV_REPO}/env.sh"

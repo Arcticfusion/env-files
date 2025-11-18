@@ -95,6 +95,8 @@ _check shyaml || {
 # file with linked valued
 fyaml="$DIR/linked-files.yaml"
 
+echo "export ENV_REPO=${DIR}/src" >> "${HOME}/.set_env_repo"
+
 # Check that shyaml is intalled
 if _check shyaml && test -e "$fyaml"; then
   keys_=$(cat "$fyaml" | shyaml 'keys')

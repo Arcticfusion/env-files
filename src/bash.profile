@@ -10,6 +10,7 @@ fi
 unset name_
 # BASH PROFILE START
 
+test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
 export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
 test -f "${ENV_REPO}/profile" && source "${ENV_REPO}/profile"
 
@@ -17,6 +18,7 @@ if [[ "$-" == *"i"* ]] && [[ -f "${ENV_REPO}/bashrc" ]]; then
   source "${ENV_REPO}/bashrc"
 fi
 
+# Maybe move this to env.path or rc later
 if test -d "/sandbox/${USER}"; then
 
   if [ "${TMPDIR}" == "" ]; then
