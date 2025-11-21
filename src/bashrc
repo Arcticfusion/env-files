@@ -57,45 +57,19 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
+# uncomment for a colored prompt, if the terminal has the capability
 force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
-    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+  if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
 	# We have color support; assume it's compliant with Ecma-48
 	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
 	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
-    else
-	color_prompt=
-    fi
+    color_prompt=yes
+  else
+    color_prompt=
+  fi
 fi
-
-test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
-test -s "${HOME}/.rc" && source "${HOME}/.rc"
-
-test -e "/sandbox/$USER/tools/miniconda3/bin/conda" &&
-eval "$(/sandbox/$USER/tools/miniconda3/bin/conda shell.bash hook 2>/dev/null)"
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/sandbox/$USER/tools/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/sandbox/$USER/tools/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/sandbox/$USER/tools/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/sandbox/$USER/tools/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-# Conda Block - Personalised
-checkt conda &&
-  load_env_file conda.sh
 
 
 if [ "$color_prompt" = yes ]; then
@@ -184,13 +158,28 @@ if ! shopt -oq posix; then
   fi
 fi
 
+test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
+test -s "${HOME}/.rc" && source "${HOME}/.rc"
 
-if [ -z "${_INIT_DIR}" ] \
-  && [ "${TERM_PROGRAM}" != "vscode" ] \
-  && [ -d "/sandbox/${USER}" ]; then
-  cd "/sandbox/${USER}"
-  _INIT_DIR="Done"
+test -e "/sandbox/$USER/tools/miniconda3/bin/conda" &&
+eval "$(/sandbox/$USER/tools/miniconda3/bin/conda shell.bash hook 2>/dev/null)"
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/sandbox/$USER/tools/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -s "/sandbox/$USER/tools/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/sandbox/$USER/tools/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/sandbox/$USER/tools/miniconda3/bin:$PATH"
+    fi
 fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+# Conda Block - Personalised
+# conda.sh loaded in rc
 
 # Use original cd path completion
 # complete -r cd
