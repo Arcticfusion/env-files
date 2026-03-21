@@ -10,14 +10,51 @@ fi
 unset name_
 # GIT SH BEGIN
 CURRENT_GIT_COMMAND=""
-export GIT_EDITOR=vim
+if [ "${TERM_PROGRAM}" = "vscode" ] && checkt code; then
+  export GIT_EDITOR="code --wait"
+else
+  export GIT_EDITOR=vim
+fi
 
-get_repo_directory () {
-  git rev-parse --show-toplevel
-}
+get_repo_directory () { git rev-parse --show-toplevel; }
 alias rdir='git rev-parse --show-toplevel'
-alias groot='rdir'
-alias rname="rdir | sed 's#.*/##'"
+quiet unalias rname
+rname () { basename "$(rdir)"; }
+master_branch_name () {
+  m_branches=($(git branch --list main master Main Master MAIN MASTER | cut -c3- ))
+  test ${#m_branches[@]} -eq 0 &&
+    errcho "No master or main branch found in repo $(rname)" &&
+    return 10
+  test ${#m_branches[@]} -gt 1 &&
+    errcho "Multiple master branches found in repo $(rname): (${m_branches[*]})" &&
+    return 11
+  echo "${m_branches}"
+}
+branch_name () { git branch --show-current; }
+
+# Using python virtual environments for git repos
+{ checkt python3 || checkt python; } &&
+venva () {
+  local repo_dir=$(get_repo_directory)
+  {
+    test -d "${repo_dir}/.venv/bin" && source "${repo_dir}/.venv/bin/activate"
+  } || {
+    test -d "${repo_dir}/.venv/Scripts" && source "${repo_dir}/.venv/Scripts/activate"
+  } &&
+    ercho "Activated python virtual environment" ||
+    errcho "No virtual environment found in repo: ${repo_dir}"
+}
+{ checkt python3 || checkt python; } &&
+gvenv () {
+  # Activate virtual environment in the repo directory
+  # Generate if it does not exist
+  local repo_dir=$(get_repo_directory)
+  test -d "${repo_dir}/.venv" || {
+    python3 -m venv "${repo_dir}/.venv" && \
+    ercho "Created python virtual environment in repo: ${repo_dir}/.venv"
+  }
+  venva
+}
 
 # Get the last tagged version number
 pversion () {
@@ -30,6 +67,8 @@ pversion () {
     egrep -m1 '^(v.?)?[0-9]+(\.[0-9]+)+$'
 }
 
+# REVIEW: May want to change this to use git config --global user.name,
+#         and check if I actually want this to be the default
 export GIT_USER_DEFAULT="${USER}"
 gu () {
   test $# -eq 0 &&
@@ -81,12 +120,6 @@ alias glast='git diff --compact-summary HEAD~1; git diff HEAD~1'
 alias gib='git branch'
 alias gb='git branch'
 alias b="git branch"
-top_branch () {
-  git branch --list master main |
-    sed 's/..//' |
-    egrep '^(master|main)$' |
-    head -n1
-}
 bhead () {
   local num_commits=1
   test $# -gt 0 && is_pos_int $1 && num_commits=$1
@@ -129,34 +162,59 @@ alias gmod='gmodified'
 # Checkout
 alias gitch='git checkout'
 alias gch='git checkout'
-alias gm='git checkout $(git branch --list master main | head -n1)'
-alias gl='git checkout $USER/local'
+alias gm='git switch $(master_branch_name)'
+alias gl='git switch $USER/local'
 quiet unalias gt
-gt () { git checkout "${GIT_USER_DEFAULT}/$(getTicket "$@")"; }
+gt () {
+  test $# -gt 0 &&
+    ticket="$(getTicket "$1")" && shift 1 ||
+    ticket="$(getTicket 1)"
+  t_branches=($(git branch --list | grep "${ticket}"))
+  test ${#t_branches[@]} -eq 0 && errcho "No branch found for ${ticket}" && return 10
+  test ${#t_branches[@]} -gt 1 && {
+    test $# -gt 0 && 
+    is_uint "$1" && test $1 -lt ${#t_branches[@]} || {
+      errcho "Multiple branches found for ${ticket}: (${t_branches[*]})" &&
+      return 11
+    }
+    branch="${t_branches[$1]}"
+  } || branch="${t_branches[0]}"
+  git switch "${branch}"
+}
 alias bt="gt"
-branch_name () { git branch | egrep '^\*' | sed -e 's#^\* *##'; }
 alias branchName=branch_name
 grup () {
   local curr=$(branch_name)
   git push --set-upstream origin "$curr"
 }
 remaster () {
-  local curr=$(branch_name)
-  local edited_files=$( git status |
-    egrep '\W+modified:' | tr '\t' ' ' |
-    sed -E 's# *modified: *(.*) *$#"\1"#' |
-    tr '\n' ' ' | append '\n'
-  )
-  local curr_commit=$(git log HEAD~1..HEAD --oneline | cut -f1 -d' ')
-  eval "git stash push $edited_files" &&
-    git checkout master &&
-    git pull upstream master &&
-    git checkout "$curr" &&
-    run git reset --hard master &&
+  local num_commits=1
+  if test $# -gt 0; then
+    is_uint $1 &&
+      num_commits=$1 &&
+      shift
+  fi
+  local current_branch="$(branch_name)"
+  local master="$(master_branch_name)"
+  local upstream="$(git remote | egrep '^(upstream|origin)$'| head -n1)"
+  local edited_files=($(gmodified))
+  # Double check how cherry pick works, this may be dropping commits
+  local curr_commit=$(git log HEAD~${num_commits}..HEAD --oneline |
+                      cut -f1 -d' ' | tr '\n' ' ' | sed 's/.$/\n/')
+#   run git whatchanged $curr_commit
+#   echo returning early for testing
+#   return 0
+
+  git stash push "${edited_files[@]}" &&
+    git checkout "${master}" &&
+    git pull "${upstream}" "${master}" &&
+    git checkout "${current_branch}" &&
+    run git reset --hard "${master}" &&
     run git cherry-pick ${curr_commit} &&
-    git push -f origin "$curr" &&
-    test -n "$edited_files" &&
-    git stash pop
+    git push -f origin "${current_branch}" &&
+    test -n "${edited_files_string}" &&
+    git stash pop ||
+    echo 'use `git reflog` to find the commit to `git reset --hard "HEAD@{n}"` to if necessary'
   return $?
 }
 testtag () {
@@ -184,7 +242,7 @@ rtag(){
 }
 grset() {
   git fetch --quiet origin
-  git branch --set-upstream-to="origin/$1";} # Change this to take in the current branch name and ask for the remote name / maybe the url
+  git branch --set-upstream-to="origin/$(branch_name)";} # Change this to ask for the remote name / maybe the url
 cammit() {
 if [[ $# > 0 ]]; then
     git commit -am "$*"
@@ -210,7 +268,7 @@ addmit() {
 }
 recommit() {
   local old_message="$(git log -1 | sed '1,4d' | sed 's/^    //')"
-  local repo_dir="$(git rev-parse --show-toplevel)"
+  local repo_dir="$(rdir)"
   local files="$(git diff --numstat HEAD~1 HEAD | cut -f3 | sed -E 's#^(.+)$#"'"$repo_dir/"'\1"#' | tr '\n' ' ' )"
   git reset HEAD~1 &&
   eval git add $files &&
@@ -242,7 +300,7 @@ combo () {
     is_uint "$1" &&
     test $1 -ge $num_ &&
     num_=$1
-  git stash push | grep -v "No local changes" && stashed=1
+  git stash push | grep -v "No local changes" && stashed=1 || unset stashed
   git rebase -i "HEAD~$num_"
   test $stashed && git stash pop
 }
