@@ -115,6 +115,8 @@ alias py='python'
 alias pyi='python -i'
 alias pyy='python3'
 alias pyyi='python3 -i'
+alias venv='python -m venv'
+alias pm='python -m'
 
 # VS Code
 alias vs='code'
