@@ -30,14 +30,10 @@ alias cdt='cd_toggle'
 alias erd='cd_toggle "${ENV_REPO}"'
 alias cder='cd_toggle "${ENV_REPO}"'
 
-quiet unalias sd
-sd () {
-  test -d "$SAND" &&
-  cd "$SAND/$1" && return
-  cd "$1"
-}
-_sd () { __tab_complete_from_path "$SAND" . ; }
-quiet complete -F _sd sd
+# Push and Pop Directories
+alias sd='pushd'
+alias pd='popd'
+
 quiet unalias rd
 rd () {
   test -d "$REPOS_PATH/$1" &&
@@ -103,6 +99,16 @@ alias ge='egrep'
 alias gi='egrep -i'
 alias ger='egrep -r'
 alias gir='egrep -ir'
+
+# ps
+fu () {
+  if test $# -eq 0; then
+    ps -fu "${USER}"
+  else
+    local pattern="$(join_by '|' "$@")"
+    pgrep -a -fu "${USER}" "$pattern"
+  fi
+}
 
 # python
 alias py='python'
@@ -205,7 +211,7 @@ alias clean='clear -x'
 alias xx='exit'
 alias pingn='ping -c'
 
-# Find the absolute location of simlinked files
+# Find the absolute location of symlinked files
 quiet type readlink &&
   alias realise='readlink -e' &&
   alias rpe='readlink -e'
@@ -213,13 +219,16 @@ quiet type realpath &&
   alias rp='realpath'
 
 # Git Aliases and Commands
-quiet which git && load_env_file "git.sh"
+checkw git && load_env_file "git.sh"
 
 # gdb commands
 quiet unalias gdb
 checkt gdb && 
   alias __gdb="$(which gdb)" &&
   alias gdb='gdb -x $ENV_REPO/gdb.tools'
+
+checkw man &&
+  cman () { man "$@" | cat; }
 
 # Script Aliases
 # load_env_file "scripts.sh"
