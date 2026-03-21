@@ -9,8 +9,26 @@ YAML_PARSER=""
 MODE="${1:-install}"
 MODE_ARG="${2:-}"
 STUB_END_MARKER="# env-files: managed-stub-end"
+DRY_RUN=0
 
 _check() { type "$@" >/dev/null 2>&1; }
+
+_log_action() {
+  echo "DRY-RUN: $*" >&2
+}
+
+_expand_path_expr() {
+  local expr="$1"
+  expr="${expr//\$\{HOME\}/$HOME}"
+  expr="${expr//\$HOME/$HOME}"
+  expr="${expr//\$\{USER\}/$USER}"
+  expr="${expr//\$USER/$USER}"
+  case "$expr" in
+    "~/"*) expr="${HOME}/${expr#~/}" ;;
+    "~") expr="$HOME" ;;
+  esac
+  printf '%s\n' "$expr"
+}
 
 DATE_FORMAT=%Y%m%d%H%M
 BACKUP_SUFFIX="~$(date +"$DATE_FORMAT")-$RANDOM"
@@ -21,6 +39,10 @@ done
 _backup_path() {
   local target="$1"
   test -e "$target" || test -L "$target" || return 0
+  if test "$DRY_RUN" -eq 1; then
+    _log_action "backup '$target' -> '${target}${BACKUP_SUFFIX}'"
+    return 0
+  fi
   mv "$target" "${target}${BACKUP_SUFFIX}"
 }
 
@@ -28,15 +50,33 @@ _ensure_parent_dir() {
   local dest="$1"
   local parent
   parent="$(dirname "$dest")"
-  test -d "$parent" || mkdir -p "$parent"
+  if ! test -d "$parent"; then
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "mkdir -p '$parent'"
+    else
+      mkdir -p "$parent"
+    fi
+  fi
 }
 
 _ensure_line_in_file() {
   local file_path="$1"
   local line="$2"
   _ensure_parent_dir "$file_path"
-  test -e "$file_path" || : > "$file_path"
-  rg -F -q -- "$line" "$file_path" || printf '\n%s\n' "$line" >> "$file_path"
+  test -e "$file_path" || {
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "create file '$file_path'"
+    else
+      : > "$file_path"
+    fi
+  }
+  rg -F -q -- "$line" "$file_path" || {
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "append line to '$file_path': $line"
+    else
+      printf '\n%s\n' "$line" >> "$file_path"
+    fi
+  }
 }
 
 _ensure_env_repo_source_hooks() {
@@ -53,6 +93,61 @@ _ensure_env_repo_source_hooks() {
   fi
 }
 
+_is_windows_host() {
+  case "$(uname -s 2>/dev/null || echo unknown)" in
+    CYGWIN*|MINGW*|MSYS*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+_to_windows_path() {
+  local path_="$1"
+  if _check cygpath; then
+    cygpath -w "$path_"
+    return 0
+  fi
+  printf '%s\n' "$path_"
+}
+
+_run_windows_cmd() {
+  env MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' \
+    cmd.exe /c "$1"
+}
+
+_run_windows_powershell() {
+  env MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' \
+    powershell.exe -NoProfile -NonInteractive -Command "$1"
+}
+
+_install_windows_link_fallback() {
+  local src="$1"
+  local dest="$2"
+  local src_win dest_win
+
+  src_win="$(_to_windows_path "$src")"
+  dest_win="$(_to_windows_path "$dest")"
+
+  # Junctions generally work for directories without symlink privilege.
+  if test -d "$src"; then
+    if _check powershell.exe; then
+      _run_windows_powershell \
+        "New-Item -ItemType Junction -Path '$dest_win' -Target '$src_win' -Force | Out-Null" \
+        >/dev/null 2>&1 && return 0
+    fi
+    _run_windows_cmd "mklink /J \"$dest_win\" \"$src_win\"" >/dev/null 2>&1 && return 0
+  else
+    # Hard links can be a useful file fallback when symlink privilege is missing.
+    if _check powershell.exe; then
+      _run_windows_powershell \
+        "New-Item -ItemType HardLink -Path '$dest_win' -Target '$src_win' -Force | Out-Null" \
+        >/dev/null 2>&1 && return 0
+    fi
+    _run_windows_cmd "mklink /H \"$dest_win\" \"$src_win\"" >/dev/null 2>&1 && return 0
+  fi
+
+  return 1
+}
+
 _install_symlink() {
   local src="$1"
   local dest="$2"
@@ -66,7 +161,19 @@ _install_symlink() {
   elif test -e "$dest"; then
     _backup_path "$dest"
   fi
-  ln -sfn "$src" "$dest"
+  if test "$DRY_RUN" -eq 1; then
+    _log_action "ln -sfn '$src' '$dest'"
+    return 0
+  fi
+  ln -sfn "$src" "$dest" && return 0
+
+  # On Windows shells, fallback to Windows-native link types only when symlink failed.
+  if _is_windows_host; then
+    echo "WARNING: symlink failed for '$dest'; trying Windows-native fallback link type." >&2
+    _install_windows_link_fallback "$src" "$dest" && return 0
+  fi
+
+  return 1
 }
 
 _install_copy() {
@@ -77,13 +184,21 @@ _install_copy() {
     if test -e "$dest" || test -L "$dest"; then
       _backup_path "$dest"
     fi
-    cp -R "$src" "$dest"
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "cp -R '$src' '$dest'"
+    else
+      cp -R "$src" "$dest"
+    fi
   else
     if test -e "$dest" || test -L "$dest"; then
       cmp -s "$src" "$dest" && return 0
       _backup_path "$dest"
     fi
-    cp "$src" "$dest"
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "cp '$src' '$dest'"
+    else
+      cp "$src" "$dest"
+    fi
   fi
 }
 
@@ -127,12 +242,20 @@ _install_source_stub() {
       return 0
     fi
     echo "WARNING: existing file '$dest' has content; appending managed stub block." >&2
-    printf '\n' >> "$dest"
-    _render_stub_block "$line" >> "$dest"
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "append managed source_stub block to '$dest'"
+    else
+      printf '\n' >> "$dest"
+      _render_stub_block "$line" >> "$dest"
+    fi
     return 0
   fi
 
-  _render_stub_block "$line" > "$dest"
+  if test "$DRY_RUN" -eq 1; then
+    _log_action "write managed source_stub block to '$dest'"
+  else
+    _render_stub_block "$line" > "$dest"
+  fi
 }
 
 _install_append_stub() {
@@ -143,10 +266,20 @@ _install_append_stub() {
   local line
   line="$(_stub_line_for "$src" "$type_" "$format_")"
   _ensure_parent_dir "$dest"
-  test -e "$dest" || : > "$dest"
+  test -e "$dest" || {
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "create file '$dest'"
+    else
+      : > "$dest"
+    fi
+  }
   rg -F -q -- "$line" "$dest" || {
-    printf '\n' >> "$dest"
-    _render_stub_block "$line" >> "$dest"
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "append managed append_stub block to '$dest'"
+    else
+      printf '\n' >> "$dest"
+      _render_stub_block "$line" >> "$dest"
+    fi
   }
 }
 
@@ -385,7 +518,7 @@ _iter_stub_targets_from_yaml() {
       test -n "$install" || install="$(_default_install_for_type "$type_")"
       case "$install" in
         source_stub|append_stub)
-          dest="$(eval "echo $to_expr")"
+          dest="$(_expand_path_expr "$to_expr")"
           printf '%s\n' "$dest"
           ;;
       esac
@@ -434,8 +567,18 @@ _write_ack_marker() {
   local file_path="$1"
   local stamp
   stamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-  test -e "$file_path" || : > "$file_path"
-  printf '\n# env-files: managed-stub-ts %s\n%s\n' "$stamp" "$STUB_END_MARKER" >> "$file_path"
+  test -e "$file_path" || {
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "create file '$file_path'"
+    else
+      : > "$file_path"
+    fi
+  }
+  if test "$DRY_RUN" -eq 1; then
+    _log_action "append ack marker to '$file_path'"
+  else
+    printf '\n# env-files: managed-stub-ts %s\n%s\n' "$stamp" "$STUB_END_MARKER" >> "$file_path"
+  fi
   echo "ACK: wrote new managed marker in '$file_path'" >&2
 }
 
@@ -481,10 +624,18 @@ if test "$MODE" = "--ack-stub-drift"; then
   _ack_stub_drift_mode "${MODE_ARG:-all}"
   exit $?
 fi
+if test "$MODE" = "--dry-run"; then
+  DRY_RUN=1
+  MODE="install"
+fi
 
-cat > "${HOME}/.set_env_repo" <<EOF
+if test "$DRY_RUN" -eq 1; then
+  _log_action "write '$HOME/.set_env_repo' with ENV_REPO export"
+else
+  cat > "${HOME}/.set_env_repo" <<EOF
 export ENV_REPO=${DIR}/src
 EOF
+fi
 _ensure_env_repo_source_hooks
 
 if test -n "$YAML_PARSER" && test -s "$FYAML"; then
@@ -504,7 +655,7 @@ if test -n "$YAML_PARSER" && test -s "$FYAML"; then
       test -n "$to_expr" || continue
 
       src="$DIR/$from_rel"
-      dest="$(eval "echo $to_expr")"
+      dest="$(_expand_path_expr "$to_expr")"
       test -n "$type_" || type_="config_file"
       test -n "$install" || install="$(_default_install_for_type "$type_")"
 
