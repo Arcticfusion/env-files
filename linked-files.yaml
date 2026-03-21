@@ -1,92 +1,159 @@
 sh:
   env_files:
+    type: directory
     to: '$HOME/.env-files'
     from: '.'
   vscode:
+    type: directory
     to: '$HOME/.vscode'
     from: 'src/vscode'
   vscode_server:
+    type: directory
     to: '$HOME/.vscode-server'
     from: 'src/vscode-server'
   rc:
+    type: script_file
+    subtype: shell_init
+    install: source_stub
     to: '$HOME/.rc'
     from: 'src/rc'
   config:
+    type: directory
     to: '$HOME/.config'
     from: 'src/config'
 vim:
   vimrc:
+    type: config_file
+    format: vimscript
+    install: source_stub
     to: '$HOME/.vimrc'
     from: 'src/vimrc'
   vim_autoload:
+    type: directory
     to: '$HOME/.vim/autoload'
     from: 'src/vim/autoload'
   vim_bundle: 
+    type: directory
     to: '$HOME/.vim/bundle'
     from: 'src/vim/bundle'
   vim_colors: 
+    type: directory
     to: '$HOME/.vim/colors'
     from: 'src/vim/colors'
   vim_ftdetect: 
-    to: '$HOME/.vim/ftdetect '
-    from: 'src/vim/ftdetect '
+    type: directory
+    to: '$HOME/.vim/ftdetect'
+    from: 'src/vim/ftdetect'
   vim_syntax: 
+    type: directory
     to: '$HOME/.vim/syntax'
     from: 'src/vim/syntax'
 bash:
   bashrc:
+    type: script_file
+    subtype: shell_init
+    install: source_stub
     to: '$HOME/.bashrc'
     from: 'src/bashrc'
   bash_logout:
+    type: script_file
+    subtype: shell_logout
+    install: source_stub
     to: '$HOME/.bash_logout'
     from: 'src/bash.logout'
   bash_profile: 
+    type: script_file
+    subtype: shell_init
+    install: source_stub
     to: '$HOME/.bash_profile'
     from: 'src/bash.profile'
   profile: 
+    type: script_file
+    subtype: shell_init
+    install: source_stub
     to: '$HOME/.profile'
     from: 'src/profile'
   iterm2_shell_integration:
+    type: script_file
+    subtype: shell_integration
+    install: source_stub
     to: '$HOME/.iterm2_shell_integration.bash'
     from: 'src/iterm2_shell_integration.bash'
 zsh:
   zshrc: 
+    type: script_file
+    subtype: shell_init
+    install: source_stub
     to: '$HOME/.zshrc'
     from: 'src/zshrc'
   zprofile: 
+    type: script_file
+    subtype: shell_init
+    install: source_stub
     to: '$HOME/.zprofile'
     from: 'src/zprofile'
   iterm2_shell_integration:
+    type: script_file
+    subtype: shell_integration
+    install: source_stub
     to: '$HOME/.iterm2_shell_integration.zsh'
     from: 'src/iterm2_shell_integration.zsh'
 ssh:
   ssh_config:
+    type: config_file
+    format: ssh_config
+    install: copy
     to: '$HOME/.ssh/config'
     from: 'src/ssh.config'
 conda:
   condarc:
+    type: config_file
+    format: yaml
+    install: copy
     to: '$HOME/.condarc'
     from: 'src/condarc'
 conan:
   conan_conf: 
+    type: config_file
+    format: ini
+    install: copy
     to: '$HOME/.conan/conan.conf'
     from: 'src/conan.config'
 git:
   gitconf:
+    type: config_file
+    format: gitconfig
+    install: copy
     to: '$HOME/.gitconfig'
     from: 'src/git.config'
+  gitignore:
+    type: config_file
+    format: gitignore
+    install: copy
+    to: '$HOME/.gitignore.global'
+    from: 'src/git.ignore'
   jira_ticket_sand:
+    type: data_file
+    format: plain_text
+    install: copy
     to: '/sandbox/$USER/jira.ticket'
     from: 'src/data/jira.ticket'
   jira_ticket_home:
+    type: data_file
+    format: plain_text
+    install: copy
     to: '$HOME/.jira-ticket'
     from: 'src/data/jira.ticket'
 docker:
   docker:
+    type: directory
     to: '$HOME/.docker'
     from: 'src/docker'
 gdb:
   gdbinit:
+    type: config_file
+    format: gdbinit
+    install: copy
     to: '$HOME/.gdbinit'
     from: 'src/gdbinit'
 
