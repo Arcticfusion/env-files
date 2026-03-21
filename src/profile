@@ -50,15 +50,20 @@ case "$KERNEL" in
   ;;
 esac
 
+
 # Current Company
 # Store the following and other company specific data in ~/.company
 #   export COMPANY_NAME=''
 #   export COMPANY_NICKNAME="${COMPANY_NAME}"
 #   export COMPANY_DOMAIN="${COMPANY_NAME/1/.com}"
-test -e "${HOME}/.company" && source "${HOME}/.company"
+if test "$ENV_CONTEXT" == "company"; then
+  test -e "${HOME}/.company" && source "${HOME}/.company" || load_env_file company.profile
+fi
 
 
 # 1Password Integration
+# Need to update this to only activate if the company uses 1Password
+# Possibly set a variable in the company.profile file to indicate if 1Password is used
 if quiet test checkt op && test "${COMPANY_NAME}" ; then
   eval "$(op completion $SHELL_NAME )"
   quiet test -f "$HOME/.op_session" && source "$HOME/.op_session"
