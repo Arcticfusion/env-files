@@ -129,13 +129,38 @@ togif () {
 }
 
 # Find all the executable files with this name in your path
-# More than just the one that gets used
-# In the future add options to do an exact basename match
+# More than just the executable that has priority in the path
+# In the future add options to do an exact basename match using -iname
+checkt egrep find &&
 cfind () {
-  local first=$1
+  local pattern=$1
   shift
-  local pattern="($(printf %s "$first" "${@/#/|}"))"
+  test $# -gt 0 && pattern="($(printf %s "${pattern}" "${@/#/|}"))"
   2>/dev/null find $(echo "$PATH" | tr ':' '\n') | egrep "[^/]*${pattern}[^/]*$"
+}
+
+# Show the default python version, or check if a version is installed
+checkt python cfind &&
+pyv () {
+  test $# -eq 0 &&
+    echo -n "$(realpath $(which python))" &&
+    ercho " ${_yellow}($(python --version))" &&
+    return 0
+  # Assumes all python executables end with a digit
+  pythons=($(
+    for c in $(cfind python | grep -Ei '(python|\d)$'); do
+      muted "$c" --version | quiet grep '.' &&
+        echo "$("$c" --version):$(realpath "$c")"
+    done | sort -u -t: -k1,1Vr -k2,2dif
+  ))
+  local pattern=$1
+  shift
+  test $# -gt 0 && pattern="($(printf %s "${pattern}" "${@/#/|}"))"
+  for p in "${pythons[@]}"; do
+    echo -n "$p" | grep -E "${pattern}" | cut -f2 -d':' && 
+    ercho -n " ${_yellow}($( echo "$p" | cut -f1 -d':'))" &&
+    echo ""
+  done
 }
 
 # Reveal a file or directory in Finder / your file explorer
