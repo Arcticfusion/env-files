@@ -13,13 +13,14 @@ unset name_
 
 # Initialise Environment Tools
 test -s "${HOME}/.set_env_repo" && source "${HOME}/.set_env_repo"
-test -z "${ENV_REPO}" &&
+test -h "${HOME}/.rc" && test -z "${ENV_REPO}" &&
   export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null ))
+test -d "${ENV_REPO}" ||
+  >&2 echo -e "\e[33mWARNING: Failed to initialise ENV_REPO"
 source "${ENV_REPO}/env.sh"
 
-_USER_NAME=$( echo -n "$USER" | tr '[:upper:]' '[:lower:]' |  tr ' ' '-' )
-_HOST_NAME="${HOST}"
-test -z "${_HOST_NAME}" && _HOST_NAME="${HOSTNAME}" # Only one should exist
+_USER_NAME=$( whoami | tr '[:upper:]' '[:lower:]' |  tr ' ' '-' )
+test -n "${HOSTNAME}" && _HOST_NAME="${HOSTNAME}" || _HOST_NAME="${HOST}"
 
 case "$_HOST_NAME" in
   *MacBook-*)
@@ -29,6 +30,8 @@ case "$_HOST_NAME" in
     _HOST_NAME="$(echo "${_HOST_NAME}" | sed -E 's/DESKTOP-*/WIN-')"
   ;;
   *)
+    test "${ENV_DEBUG}" &&
+      >&2 echo "No Hostname changes for ${_HOST_NAME}"
   ;;
 esac
 _HOST_NAME="$(echo "${_HOST_NAME}" | sed -E 's/\.local$//')"
@@ -56,33 +59,45 @@ case "$_USER_NAME" in
   ;;
 esac
 
+test -z "${USER}" && export USER="${USERNAME}"
+test -z "${USER}" && export USER="$(whoami 2>/dev/null)"
+
 export _HOST_NAME
 export _USER_NAME
 
-OS_NAME=$(uname | lower )
+OS_NAME=$(uname | lower)
 if [[ "$OS_NAME" == "darwin"* ]] ; then
   quiet which sw_vers &&
-    OS_NAME=$(sw_vers -productName | lower )
+    OS_NAME=$(sw_vers -productName | lower)
 fi
 export OS_NAME
 
 case "$OS_NAME" in
   macos*)
-    test -f "${ENV_REPO}/macos.sh" && source "${ENV_REPO}/macos.sh"
+    load_env_file "macos.sh"
   ;;
   linux*)
-    test -f "${ENV_REPO}/linux.sh" && source "${ENV_REPO}/linux.sh"
+    load_env_file "linux.sh"
+  ;;
+  mingw64*)
+    load_env_file "windows.sh"
   ;;
   *)
     echo "OS:$OS_NAME has no env preferences" 1>&2
   ;;
 esac
 
+# checkt conda && load_env_file conda.sh
 load_env_file data/vars.rc
 load_env_file aliases
 load_env_file tools.sh
-load_env_file colors.sh
 
+checkt q && {
+  pykx_path="$HOME/.kx/venv/lib/python3.14/site-packages/pykx"
+  test -d "$pykx_path" &&
+    export QPATH="$QPATH:$pykx_path"
+  unset pykx_path
+}
 
 # RC END
 test -n "${ENV_DEBUG}" &&
