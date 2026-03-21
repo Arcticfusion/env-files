@@ -6,6 +6,9 @@ set -u
 DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 FYAML="$DIR/linked-files.yaml"
 YAML_PARSER=""
+MODE="${1:-install}"
+MODE_ARG="${2:-}"
+STUB_END_MARKER="# env-files: managed-stub-end"
 
 _check() { type "$@" >/dev/null 2>&1; }
 
@@ -97,6 +100,16 @@ _stub_line_for() {
   fi
 }
 
+_render_stub_block() {
+  local line="$1"
+  local stamp
+  stamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  printf '# managed by env-files\n'
+  printf '%s' "$line"
+  printf '# env-files: managed-stub-ts %s\n' "$stamp"
+  printf '%s\n' "$STUB_END_MARKER"
+}
+
 _install_source_stub() {
   local src="$1"
   local dest="$2"
@@ -110,15 +123,16 @@ _install_source_stub() {
     _backup_path "$dest"
   elif test -s "$dest"; then
     # Keep local edits, only ensure the include line exists.
-    if rg -F -q -- "$line" "$dest"; then
+    if rg -F -q -- "$line" "$dest" && rg -F -q -- "$STUB_END_MARKER" "$dest"; then
       return 0
     fi
+    echo "WARNING: existing file '$dest' has content; appending managed stub block." >&2
+    printf '\n' >> "$dest"
+    _render_stub_block "$line" >> "$dest"
+    return 0
   fi
 
-  {
-    printf '# managed by env-files\n'
-    printf '%s' "$line"
-  } > "$dest"
+  _render_stub_block "$line" > "$dest"
 }
 
 _install_append_stub() {
@@ -131,7 +145,8 @@ _install_append_stub() {
   _ensure_parent_dir "$dest"
   test -e "$dest" || : > "$dest"
   rg -F -q -- "$line" "$dest" || {
-    printf '\n# managed by env-files\n%s' "$line" >> "$dest"
+    printf '\n' >> "$dest"
+    _render_stub_block "$line" >> "$dest"
   }
 }
 
@@ -339,6 +354,115 @@ _minimal_fallback_install() {
   fi
 }
 
+_stub_has_nonempty_after_marker() {
+  local file_path="$1"
+  awk -v marker="$STUB_END_MARKER" '
+    $0 == marker { last = NR }
+    { lines[NR] = $0 }
+    END {
+      if (!last) exit 2
+      for (i = last + 1; i <= NR; i++) {
+        if (lines[i] !~ /^[[:space:]]*$/) exit 0
+      }
+      exit 1
+    }
+  ' "$file_path"
+}
+
+_iter_stub_targets_from_yaml() {
+  local keys_ k f to_expr type_ install dest
+  keys_="$(_yaml_keys)"
+  while read -r k; do
+    test -n "$k" || continue
+    _check "$k" || continue
+    while read -r f; do
+      test -n "$f" || continue
+      to_expr="$(_read_yaml_value "$k.$f.to")"
+      type_="$(_read_yaml_value "$k.$f.type")"
+      install="$(_read_yaml_value "$k.$f.install")"
+      test -n "$to_expr" || continue
+      test -n "$type_" || type_="config_file"
+      test -n "$install" || install="$(_default_install_for_type "$type_")"
+      case "$install" in
+        source_stub|append_stub)
+          dest="$(eval "echo $to_expr")"
+          printf '%s\n' "$dest"
+          ;;
+      esac
+    done < <(_yaml_keys "$k")
+  done < <(printf '%s\n' "$keys_")
+}
+
+_check_stub_drift_mode() {
+  local checked=0 drifted=0 file
+  if test -n "$YAML_PARSER" && test -s "$FYAML"; then
+    while read -r file; do
+      test -n "$file" || continue
+      test -e "$file" || continue
+      checked=$((checked + 1))
+      if _stub_has_nonempty_after_marker "$file"; then
+        echo "DRIFT: non-empty content after managed marker in '$file'" >&2
+        drifted=$((drifted + 1))
+      else
+        rc=$?
+        if test "$rc" -eq 2; then
+          echo "INFO: no managed marker found in '$file' (legacy/manual file)." >&2
+        fi
+      fi
+    done < <(_iter_stub_targets_from_yaml | awk '!seen[$0]++')
+  else
+    echo "Unable to parse YAML; checking minimal known stub targets only." >&2
+    for file in "$HOME/.profile" "$HOME/.rc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.zprofile"; do
+      test -e "$file" || continue
+      checked=$((checked + 1))
+      if _stub_has_nonempty_after_marker "$file"; then
+        echo "DRIFT: non-empty content after managed marker in '$file'" >&2
+        drifted=$((drifted + 1))
+      fi
+    done
+  fi
+
+  if test "$drifted" -gt 0; then
+    echo "Checked $checked stub file(s); found $drifted drift issue(s)." >&2
+    return 1
+  fi
+  echo "Checked $checked stub file(s); no drift after managed marker." >&2
+  return 0
+}
+
+_write_ack_marker() {
+  local file_path="$1"
+  local stamp
+  stamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  test -e "$file_path" || : > "$file_path"
+  printf '\n# env-files: managed-stub-ts %s\n%s\n' "$stamp" "$STUB_END_MARKER" >> "$file_path"
+  echo "ACK: wrote new managed marker in '$file_path'" >&2
+}
+
+_ack_stub_drift_mode() {
+  local target="${1:-all}"
+  local file
+
+  if test "$target" != "all"; then
+    _write_ack_marker "$target"
+    return 0
+  fi
+
+  if test -n "$YAML_PARSER" && test -s "$FYAML"; then
+    while read -r file; do
+      test -n "$file" || continue
+      test -e "$file" || continue
+      _write_ack_marker "$file"
+    done < <(_iter_stub_targets_from_yaml | awk '!seen[$0]++')
+  else
+    echo "Unable to parse YAML; acknowledging minimal known stub targets only." >&2
+    for file in "$HOME/.profile" "$HOME/.rc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.zshrc" "$HOME/.zprofile"; do
+      test -e "$file" || continue
+      _write_ack_marker "$file"
+    done
+  fi
+}
+
 _init_yaml_parser || {
   # Prefer PyYAML when Python is available.
   { _check pip3 && pip3 install pyyaml; } ||
@@ -348,6 +472,15 @@ _init_yaml_parser || {
   { _check pip3 && pip3 install shyaml; }
   _init_yaml_parser || true
 }
+
+if test "$MODE" = "--check-stub-drift"; then
+  _check_stub_drift_mode
+  exit $?
+fi
+if test "$MODE" = "--ack-stub-drift"; then
+  _ack_stub_drift_mode "${MODE_ARG:-all}"
+  exit $?
+fi
 
 cat > "${HOME}/.set_env_repo" <<EOF
 export ENV_REPO=${DIR}/src
@@ -386,6 +519,11 @@ if test -n "$YAML_PARSER" && test -s "$FYAML"; then
 else
   >&2 echo "Unable to read links from '$FYAML' with available parsers."
   _minimal_fallback_install
+fi
+
+# Default behavior: always warn on stub drift after install/update runs.
+if ! _check_stub_drift_mode; then
+  >&2 echo "WARNING: stub drift detected. Review files, then run --ack-stub-drift when done."
 fi
 
 bkups=($(find "$HOME" -maxdepth 1 -name "*${BACKUP_SUFFIX}"))
