@@ -14,9 +14,9 @@ unset name_
 # Define the current environment
 # REVIEW: ps $$ is formated differently on different machines
 SHELL="$(which $(ps $$ | tail -n1 | awk '{print $5}' | sed 's/^-//'))"
-type "${SHELL}" 2>/dev/null || SHELL="$0"
+type "${SHELL}" &>/dev/null || SHELL="$0"
 export SHELL
-export SHELL_NAME="$(echo "$SHELL" | sed -E 's#(.*/)?([^/]*)sh$#\2sh#')"
+export SHELL_NAME="$(basename "$SHELL")"
 
 test -z "${ENV_REPO}" &&
   export ENV_REPO=$(dirname $(readlink -f "$0" 2>/dev/null))
