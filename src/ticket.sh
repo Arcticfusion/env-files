@@ -1,30 +1,30 @@
 #!/bin/bash
-name_="jira.sh"
-if ! [ -n "$_JIRA_INIT" ]; then
-  export _JIRA_INIT="True"
+name_="ticket.sh"
+if ! [ -n "$_TICKET_INIT" ]; then
+  export _TICKET_INIT="True"
 else
   >&2 echo "Already Initialising $name_"
   return
 fi
 >&2 echo "Initialising $name_"
 unset name_
-# JIRA SH START
+# TICKET SH START
 
-jirat="/sandbox/$USER/jira.ticket"
-test -e "$jirat" ||
-  jirat="$HOME/$USER/jira.ticket"
+ticket_file="/sandbox/$USER/ticket"
+test -e "$ticket_file" ||
+  ticket_file="$HOME/.ticket"
 
 getTicketInfo() {
-  if ! test -e "$JIRA_FILE"; then
-    errcho "No Jira File: JIRA_FILE='$JIRA_FILE'"
+  if ! test -e "$TICKET_FILE"; then
+    errcho "No ticket file: TICKET_FILE='$TICKET_FILE'"
     return 1
   fi
   if test "$#" -gt 0; then
     for t in "$@"; do
-      tail -n "$t" "$JIRA_FILE" | head -n 1 || errcho "'$t' is not a ticket index"
+      tail -n "$t" "$TICKET_FILE" | head -n 1 || errcho "'$t' is not a ticket index"
     done
   else
-    tail -n 1 "$JIRA_FILE"
+    tail -n 1 "$TICKET_FILE"
   fi
 }
 alias gti="getTicketInfo"
@@ -39,7 +39,7 @@ getTicketName() {
 }
 
 addTicket() {
-  test -e "$JIRA_FILE" || return $?
+  test -e "$TICKET_FILE" || return $?
   test "$#" -ge "1" || return $?
   local ticket=$(echo "$1" | egrep "^[A-Z]{2}-[0-9]{4,6}$")
   test -n "$ticket" || return $?
@@ -48,14 +48,14 @@ addTicket() {
   local date_="$(date -d "$2" $date_pattern 2>/dev/null && shift 1 || date $date_pattern )"
   local name="$(echo "$*" | sed -E 's/^ *//' | sed -E 's/ *$//' | sed 's/ +/ /g' )"
   echo "$ticket;$date_;$name"
-  echo "$ticket;$date_;$name" >> "$JIRA_FILE"
+  echo "$ticket;$date_;$name" >> "$TICKET_FILE"
 }
 
-test -e "$jirat" &&
-  export JIRA_FILE="$jirat" &&
-  export JIRA_TICKET=$(getTicket)
+test -e "$ticket_file" &&
+  export TICKET_FILE="$ticket_file" &&
+  export TICKET=$(getTicket)
 
-# JIRA SH END
+# TICKET SH END
 test -n "${ENV_DEBUG}" &&
-  >&2 echo -e "\tjira.sh is Initialised"
-unset _JIRA_INIT
+  >&2 echo -e "\tticket.sh is Initialised"
+unset _TICKET_INIT
