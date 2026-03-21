@@ -6,8 +6,8 @@ set -u
 DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 FYAML="$DIR/linked-files.yaml"
 YAML_PARSER=""
-MODE="${1:-install}"
-MODE_ARG="${2:-}"
+ACTION="install"
+ACTION_ARG=""
 STUB_END_MARKER="# env-files: managed-stub-end"
 DRY_RUN=0
 ALLOW_DEP_INSTALL=1
@@ -17,7 +17,8 @@ _check() { type "$@" >/dev/null 2>&1; }
 _print_help() {
   cat <<'EOF'
 Usage:
-  gen-symlinks.sh [mode] [arg]
+  gen-symlinks.sh [action] [action-arg] [flags...]
+  gen-symlinks.sh [flags...] [action] [action-arg]
 
 Modes:
   install                      Default mode. Apply links/stubs/copies from linked-files.yaml.
@@ -34,7 +35,9 @@ Dependency control:
 Examples:
   ./gen-symlinks.sh
   ./gen-symlinks.sh --dry-run
+  ./gen-symlinks.sh --no-install-deps --dry-run
   ./gen-symlinks.sh --check-stub-drift
+  ./gen-symlinks.sh --check-stub-drift --no-install-deps
   ./gen-symlinks.sh --ack-stub-drift "$HOME/.bashrc"
   ./gen-symlinks.sh --prune-backups 14
   ./gen-symlinks.sh --no-install-deps
@@ -677,24 +680,58 @@ _prune_backups_mode() {
   done < <(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +"$days")
 
   if test "$DRY_RUN" -eq 1; then
-    echo "DRY-RUN: would prune $pruned backup directorie(s) older than $days day(s) from '$BACKUP_ROOT'." >&2
+    echo "DRY-RUN: would prune $pruned backup directories older than $days day(s) from '$BACKUP_ROOT'." >&2
   else
-    echo "Pruned $pruned backup directorie(s) older than $days day(s) from '$BACKUP_ROOT'." >&2
+    echo "Pruned $pruned backup directories older than $days day(s) from '$BACKUP_ROOT'." >&2
   fi
 }
 
-if test "$MODE" = "--help"; then
+while test $# -gt 0; do
+  case "$1" in
+    install)
+      ACTION="install"
+      ;;
+    --help)
+      ACTION="help"
+      ;;
+    --dry-run)
+      DRY_RUN=1
+      ;;
+    --no-install-deps)
+      ALLOW_DEP_INSTALL=0
+      ;;
+    --install-deps)
+      ALLOW_DEP_INSTALL=1
+      ;;
+    --check-stub-drift)
+      ACTION="check-stub-drift"
+      ;;
+    --ack-stub-drift)
+      ACTION="ack-stub-drift"
+      if test $# -gt 1 && test "${2#--}" = "$2"; then
+        ACTION_ARG="$2"
+        shift
+      fi
+      ;;
+    --prune-backups)
+      ACTION="prune-backups"
+      if test $# -gt 1 && test "${2#--}" = "$2"; then
+        ACTION_ARG="$2"
+        shift
+      fi
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      _print_help
+      exit 2
+      ;;
+  esac
+  shift
+done
+
+if test "$ACTION" = "help"; then
   _print_help
   exit 0
-fi
-
-if test "$MODE" = "--no-install-deps"; then
-  ALLOW_DEP_INSTALL=0
-  MODE="install"
-fi
-if test "$MODE" = "--install-deps"; then
-  ALLOW_DEP_INSTALL=1
-  MODE="install"
 fi
 
 _init_yaml_parser || {
@@ -711,20 +748,16 @@ _init_yaml_parser || {
   fi
 }
 
-if test "$MODE" = "--check-stub-drift"; then
+if test "$ACTION" = "check-stub-drift"; then
   _check_stub_drift_mode
   exit $?
 fi
-if test "$MODE" = "--ack-stub-drift"; then
-  _ack_stub_drift_mode "${MODE_ARG:-all}"
+if test "$ACTION" = "ack-stub-drift"; then
+  _ack_stub_drift_mode "${ACTION_ARG:-all}"
   exit $?
 fi
-if test "$MODE" = "--dry-run"; then
-  DRY_RUN=1
-  MODE="install"
-fi
-if test "$MODE" = "--prune-backups"; then
-  _prune_backups_mode "${MODE_ARG:-30}"
+if test "$ACTION" = "prune-backups"; then
+  _prune_backups_mode "${ACTION_ARG:-30}"
   exit $?
 fi
 
