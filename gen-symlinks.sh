@@ -10,8 +10,36 @@ MODE="${1:-install}"
 MODE_ARG="${2:-}"
 STUB_END_MARKER="# env-files: managed-stub-end"
 DRY_RUN=0
+ALLOW_DEP_INSTALL=1
 
 _check() { type "$@" >/dev/null 2>&1; }
+
+_print_help() {
+  cat <<'EOF'
+Usage:
+  gen-symlinks.sh [mode] [arg]
+
+Modes:
+  install                      Default mode. Apply links/stubs/copies from linked-files.yaml.
+  --dry-run                    Simulate install actions without writing changes.
+  --check-stub-drift           Check for non-empty content after managed stub marker.
+  --ack-stub-drift [path|all]  Append a fresh managed marker to one file or all stub targets.
+  --prune-backups [days]       Delete backup run directories older than N days (default: 30).
+  --help                       Show this help text.
+
+Dependency control:
+  --no-install-deps            Do not attempt to install YAML parser dependencies.
+  --install-deps               Force dependency auto-install behavior (default).
+
+Examples:
+  ./gen-symlinks.sh
+  ./gen-symlinks.sh --dry-run
+  ./gen-symlinks.sh --check-stub-drift
+  ./gen-symlinks.sh --ack-stub-drift "$HOME/.bashrc"
+  ./gen-symlinks.sh --prune-backups 14
+  ./gen-symlinks.sh --no-install-deps
+EOF
+}
 
 _log_action() {
   echo "DRY-RUN: $*" >&2
@@ -655,14 +683,32 @@ _prune_backups_mode() {
   fi
 }
 
+if test "$MODE" = "--help"; then
+  _print_help
+  exit 0
+fi
+
+if test "$MODE" = "--no-install-deps"; then
+  ALLOW_DEP_INSTALL=0
+  MODE="install"
+fi
+if test "$MODE" = "--install-deps"; then
+  ALLOW_DEP_INSTALL=1
+  MODE="install"
+fi
+
 _init_yaml_parser || {
-  # Prefer PyYAML when Python is available.
-  { _check pip3 && pip3 install pyyaml; } ||
-  { _check pip && pip install pyyaml; } ||
-  { _check pip && pip install shyaml; } ||
-  { _check brew && brew install shyaml; } ||
-  { _check pip3 && pip3 install shyaml; }
-  _init_yaml_parser || true
+  if test "$ALLOW_DEP_INSTALL" -eq 1; then
+    # Prefer PyYAML when Python is available.
+    { _check pip3 && pip3 install pyyaml; } ||
+    { _check pip && pip install pyyaml; } ||
+    { _check pip && pip install shyaml; } ||
+    { _check brew && brew install shyaml; } ||
+    { _check pip3 && pip3 install shyaml; }
+    _init_yaml_parser || true
+  else
+    echo "YAML parser not available and dependency auto-install is disabled." >&2
+  fi
 }
 
 if test "$MODE" = "--check-stub-drift"; then
