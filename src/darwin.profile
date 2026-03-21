@@ -13,7 +13,7 @@ unset name_
 # format this like PATH
 export SHARED_DRIVE_PATHS=""
 
-shmount () {
+mount_shared_drives () {
   local sdrives=($(echo "${SHARED_DRIVE_PATHS}" | tr ':' '\n' ))
   echo -n "Confirm mounting of the shared drives ( Y |[N]): "
   read confirm_mount_
@@ -39,6 +39,7 @@ shmount () {
     export ${driveName}_MOUNTPOINT=${mountLoc}
   done
 }
+alias mounts='mount_shared_drives'
 
 # DARWIN PROFILE END
 test -n "${ENV_DEBUG}" &&
