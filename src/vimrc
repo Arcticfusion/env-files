@@ -53,9 +53,9 @@ set mouse=a
 "}}}
 
 "  Escape Sequences {{{
-inoremap qq <esc>
+" inoremap qq <esc>
 
-vnoremap qq <esc>
+" vnoremap qq <esc>
 "}}}
 
 " Movement {{{
@@ -67,6 +67,14 @@ noremap j h
 noremap l l
 noremap - $
 noremap _ ^
+" Navigate between panes
+noremap <C-w>k <C-w>k
+noremap <C-w>m <C-w>j
+noremap <C-w>j <C-w>h
+noremap <C-w>l <C-w>l
+"Jump back or forward to previous positions via a stack
+noremap B <C-o>
+noremap F <C-i>
 "}}}
 
 " Selection {{{
@@ -122,7 +130,7 @@ augroup configgroup
                   \*.txt,*.md,
                   \*.c,*.cpp,*.h,*.java,*.py
                   \:%s/\s\+$//e
-"                 \:call <SID>StripTrailingWhitespaces()
+"                   \:call <SID>StripTrailingWhitespaces()
     autocmd FileType java setlocal noexpandtab
     autocmd FileType java setlocal list
     autocmd FileType java setlocal listchars=tab:+\ ,eol:-
