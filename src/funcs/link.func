@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+# Currently incomplete
+return false
+
+# Stored in a stack like array
+
+# Stores provided item in a bookmark
+link_copy () {
+
+}
+alias lnc='link_copy'
+
+# Uses bookmarked item as source for link command
+link_paste () {
+
+}
+alias lnp='link_paste'
+
+link_delete () {
+
+}
+alias lnd='link_delete'

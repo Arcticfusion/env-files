@@ -13,24 +13,77 @@ unset name_
 test -n "$ENV_TOOLS" || { >&2 echo "env.tools is not initialised" && return false}
 
 # Additional Functions
-load_env_file 'funcs/cleanPATH.func'
-load_env_file 'funcs/laa.func'
-load_env_file 'funcs/prompt.func'
-
+quiet alias __ls || alias __ls=ls
+for f in $(__ls "$ENV_REPO/funcs") ; do
+  load_env_file "funcs/$f"
+done
 
 # Testing shell functions
 tf () {
   if test $@; then
-    ercho "\e[32mtrue" || echo true
+    ercho "\e[32mtrue" || >&2 echo true
     return true
   else
-    ercho "\e[31mfalse" || echo false
+    ercho "\e[31mfalse" || >&2 echo false
     return false
   fi
 }
 alias testy='tf'
+alias true_false='tf'
+alias trufal='tf'
+
+# Run multiple test options for single arguments
+# No tests for comparisions of multiple arguments
+
+tests () {
+  local test_opts=()
+  local result=0
+  local early_return=0
+  local verbose=1
+  local quiet_mode=1
+  while getopts 'bcdefghknprstuwxzLOGSaqv' opt; do
+    case $opt in
+      b|c|d|e|f|g|h|k|n|p|r|s|t|u|w|x|z|L|O|G|S) test_opts+=("-$opt");;
+      a) early_return=1;; # Do all Tests even if one fails
+      q) quiet_mode=0;;   # Quiet mode, no text output
+      v) verbose=0;;      # Verbose mode, output test commands
+      ?) errcho "Invalid option: -$OPTARG" ; return 2 ;;
+    esac
+  done
+  shift $((OPTIND -1))
+  local test_cmd
+  if test $verbose -eq 0; then
+    test_cmd='run test'
+  else
+    test_cmd='test'
+  fi
+  if test ${#test_opts[@]} -eq 0; then
+    test $verbose -eq 0 &&
+      ercho "$0: No."
+    eval "$test_cmd '$*'"
+    result=$?
+    test $quiet_mode -ne 0 && ercho "$0: Failed 'test $t_opt $arg'"
+    return $?
+  fi
+  while test $# -gt 0; do
+    arg="$1"
+    shift 1
+    for t_opt in "${test_opts[@]}"; do
+      eval "$test_cmd $t_opt $arg"
+      result=$?
+      test $result -ne 0 && {
+        test $quiet_mode -ne 0 && ercho "$0: Failed 'test $t_opt $arg'"
+        test $early_return -eq 0 && return $result
+      }
+    done
+  done
+  return $result
+
+}
+result () { test $? -eq 0; }
 
 # Send a file to the 'Downloads' folder of another machine
+checkt ssh rsync &&
 send () {
   test $# -lt 2 && er=$? && ercho "Usage: send <remote> <filename> [filename...]" return 1
   local remote_="$1"
@@ -50,6 +103,7 @@ send () {
   done
 }
 
+checkt sed realpath &&
 rstripf() {
   sed -Ei '' 's/ +$//' $( realpath "$@" | tr '\n' ' ' )
 }
@@ -107,14 +161,18 @@ note () {
     test -n "$date_format" || date_format='%Y-%m-%d-%H%M'
     echo "$(date +"${date_format}")::$(echo "$*")" >> "${NOTES_FILE}"
   else
-    more "${NOTES_FILE}"
+    checkt more &&
+    more "${NOTES_FILE}" && return $?
+    checkt less &&
+    less "${NOTES_FILE}" && return $?
+    cat "${NOTES_FILE}" || return $?
   fi
 }
 
 alias notes='"${EDITOR}" "${NOTES_FILE}"'
 
 # Convert a .mov to a .gif
-quiet which ffmpeg &&
+checkt ffmpeg sed &&
 togif () {
   test $# -gt 0 || exit $?
   mov_file="$1"
@@ -144,26 +202,31 @@ checkt python cfind &&
 pyv () {
   test $# -eq 0 &&
     echo -n "$(realpath $(which python))" &&
-    ercho " ${_yellow}($(python --version))" &&
+    ercho -n " ${_yellow}($(python --version))" &&
+    echo "" &&
     return 0
   # Assumes all python executables end with a digit
+  pys=($(cfind python | grep -Ei '(python|\d)$'))
   pythons=($(
-    for c in $(cfind python | grep -Ei '(python|\d)$'); do
+    for c in "${pys[@]}"; do
       muted "$c" --version | quiet grep '.' &&
-        echo "$("$c" --version):$(realpath "$c")"
-    done | sort -u -t: -k1,1Vr -k2,2dif
+        echo "$("$c" --version | sed 's/^python //i'):$(realpath "$c")"
+    done | sort -u -t: -k1,1Vr -k2,2dif | cut -f2 -d':'
   ))
   local pattern=$1
   shift
   test $# -gt 0 && pattern="($(printf %s "${pattern}" "${@/#/|}"))"
   for p in "${pythons[@]}"; do
-    echo -n "$p" | grep -E "${pattern}" | cut -f2 -d':' && 
-    ercho -n " ${_yellow}($( echo "$p" | cut -f1 -d':'))" &&
+    py_match=$(echo "$p" | grep -E "${pattern}")
+    test -n "$py_match" &&
+    echo -n "$p" && 
+    ercho -n " ${_yellow}($("$p" --version))" &&
     echo ""
   done
 }
 
 # Reveal a file or directory in Finder / your file explorer
+checkt dirname open &&
 reveal() {
   # grab the first arg or default to pwd
   local basedir=${1:-${PWD}}
@@ -175,6 +238,30 @@ reveal() {
   # basedir is a directory in now, so open will activate Finder.
   # The argument is quoted to accommodate spaces in the filename.
   open "$basedir"
+}
+
+# Bookmark a directory
+bookmark_directory () {
+  # Print bookmarked directories if no arguments provided
+  test $# -gt 0 &&
+    echo "BOOKMARKED_DIRECTORIES=$BOOKMARKED_DIRECTORIES" &&
+    return 0
+    # update this to 
+  local prefix=":"
+  test -z "$BOOKMARKED_DIRECTORIES" && prefix=""
+  while test $# -gt 0; do
+    test -d "$1" &&
+      BOOKMARKED_DIRECTORIES="${BOOKMARKED_DIRECTORIES}${prefix}$(realpath "$1")" ||
+      test $# -gt 0 && echo "Implement this to cd to the directory"
+    shift
+  done
+}
+
+remove_directory_bookmark () {
+  # given a number, remove the bookmark
+  # -A for delete all bookmarks
+  # ask for input if no arguments given
+  echo -n '' # Placeholder
 }
 
 # TOOLS SH END
