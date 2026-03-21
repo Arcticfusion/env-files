@@ -31,19 +31,34 @@ _expand_path_expr() {
 }
 
 DATE_FORMAT=%Y%m%d%H%M
-BACKUP_SUFFIX="~$(date +"$DATE_FORMAT")-$RANDOM"
-while test 0 -ne "$(find "$HOME" -maxdepth 1 -name "*${BACKUP_SUFFIX}" | wc -l)"; do
-  BACKUP_SUFFIX="~$(date +"$DATE_FORMAT")-$RANDOM"
-done
+RUN_STAMP="$(date +"$DATE_FORMAT")-$RANDOM"
+BACKUP_ROOT="${ENV_FILES_BACKUP_ROOT:-$HOME/.env-files-backups}"
+BACKUP_DIR="$BACKUP_ROOT/$RUN_STAMP"
+BACKUP_COUNT=0
+
+_backup_destination_for() {
+  local target="$1"
+  local rel
+  case "$target" in
+    "$HOME"/*) rel="${target#"$HOME"/}" ;;
+    /*) rel="${target#/}" ;;
+    *) rel="$target" ;;
+  esac
+  printf '%s/%s\n' "$BACKUP_DIR" "$rel"
+}
 
 _backup_path() {
   local target="$1"
+  local backup_path
   test -e "$target" || test -L "$target" || return 0
+  backup_path="$(_backup_destination_for "$target")"
   if test "$DRY_RUN" -eq 1; then
-    _log_action "backup '$target' -> '${target}${BACKUP_SUFFIX}'"
+    _log_action "backup '$target' -> '$backup_path'"
     return 0
   fi
-  mv "$target" "${target}${BACKUP_SUFFIX}"
+  mkdir -p "$(dirname "$backup_path")"
+  mv "$target" "$backup_path"
+  BACKUP_COUNT=$((BACKUP_COUNT + 1))
 }
 
 _ensure_parent_dir() {
@@ -606,6 +621,40 @@ _ack_stub_drift_mode() {
   fi
 }
 
+_prune_backups_mode() {
+  local days="${1:-30}"
+  local pruned=0
+  local d
+
+  case "$days" in
+    ''|*[!0-9]*)
+      echo "Invalid prune value '$days'. Use a non-negative integer day count." >&2
+      return 2
+      ;;
+  esac
+
+  test -d "$BACKUP_ROOT" || {
+    echo "No backup root found at '$BACKUP_ROOT'; nothing to prune." >&2
+    return 0
+  }
+
+  while read -r d; do
+    test -n "$d" || continue
+    if test "$DRY_RUN" -eq 1; then
+      _log_action "rm -rf '$d'"
+    else
+      rm -rf "$d"
+    fi
+    pruned=$((pruned + 1))
+  done < <(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +"$days")
+
+  if test "$DRY_RUN" -eq 1; then
+    echo "DRY-RUN: would prune $pruned backup directorie(s) older than $days day(s) from '$BACKUP_ROOT'." >&2
+  else
+    echo "Pruned $pruned backup directorie(s) older than $days day(s) from '$BACKUP_ROOT'." >&2
+  fi
+}
+
 _init_yaml_parser || {
   # Prefer PyYAML when Python is available.
   { _check pip3 && pip3 install pyyaml; } ||
@@ -627,6 +676,10 @@ fi
 if test "$MODE" = "--dry-run"; then
   DRY_RUN=1
   MODE="install"
+fi
+if test "$MODE" = "--prune-backups"; then
+  _prune_backups_mode "${MODE_ARG:-30}"
+  exit $?
 fi
 
 if test "$DRY_RUN" -eq 1; then
@@ -677,7 +730,9 @@ if ! _check_stub_drift_mode; then
   >&2 echo "WARNING: stub drift detected. Review files, then run --ack-stub-drift when done."
 fi
 
-bkups=($(find "$HOME" -maxdepth 1 -name "*${BACKUP_SUFFIX}"))
-test ${#bkups[@]} -gt 0 &&
-  >&2 echo "=> ${#bkups[@]} backup files created with suffix '${BACKUP_SUFFIX}'"
+if test "$DRY_RUN" -eq 1; then
+  >&2 echo "DRY-RUN: backups would be written under '$BACKUP_DIR'"
+elif test "$BACKUP_COUNT" -gt 0; then
+  >&2 echo "=> $BACKUP_COUNT backup file(s) saved under '$BACKUP_DIR'"
+fi
 
